@@ -1,6 +1,6 @@
 package me.bwelco
 
-import me.bwelco.worker.AcceptRunnable
+import me.bwelco.worker.ServerEventProdiver
 import me.bwelco.worker.ConnectionRunnable
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -11,7 +11,7 @@ class Server {
     }
 
     fun start(port: Int) {
-        Thread(AcceptRunnable(port, connectionQueue)).start()
+        Thread(ServerEventProdiver(port, connectionQueue)).start()
         Thread(ConnectionRunnable(connectionQueue)).start()
     }
 }

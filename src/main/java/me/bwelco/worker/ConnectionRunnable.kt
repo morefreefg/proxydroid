@@ -28,8 +28,6 @@ class ConnectionRunnable(val connectionQueue: LinkedBlockingQueue<Connection>): 
         socketChannel.register(this.writeSelector, SelectionKey.OP_WRITE, newConnection)
 
         this.socketMap.put(newConnection.sockerId, newConnection.socketChannel)
-
-
     }
 
     override fun run() {
