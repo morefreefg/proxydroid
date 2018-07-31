@@ -1,0 +1,17 @@
+package me.bwelco
+
+import me.bwelco.worker.AcceptRunnable
+import me.bwelco.worker.ConnectionRunnable
+import java.util.concurrent.LinkedBlockingQueue
+
+class Server {
+
+    companion object {
+        val connectionQueue = LinkedBlockingQueue<Connection>()
+    }
+
+    fun start(port: Int) {
+        Thread(AcceptRunnable(port, connectionQueue)).start()
+        Thread(ConnectionRunnable(connectionQueue)).start()
+    }
+}
