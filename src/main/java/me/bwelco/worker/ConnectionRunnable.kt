@@ -1,40 +1,41 @@
 package me.bwelco.worker
 
-import me.bwelco.Connection
-import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
+import me.bwelco.*
 import java.nio.channels.SocketChannel
 import java.util.concurrent.LinkedBlockingQueue
 
-class ConnectionRunnable(val connectionQueue: LinkedBlockingQueue<Connection>): Runnable {
+class ConnectionRunnable(val eventQueue: LinkedBlockingQueue<Event>): Runnable {
 
-
-    private val socketMap = mutableMapOf<Long, SocketChannel>()
-    private lateinit var readSelector: Selector
-    private lateinit var writeSelector: Selector
+    val connectionMap = mutableMapOf<Long, SocketChannel>()
 
     fun initialize() {
-        readSelector = Selector.open()
-        writeSelector = Selector.open()
 
     }
 
-    fun takeNewSocketChannel() {
-        val newConnection = connectionQueue.take()
+    fun newConnection(accetpEvent: AccetpEvent) {
+        connectionMap.put(accetpEvent.connection.socketId, accetpEvent.connection.socketChannel)
+        println("new connection: ${accetpEvent.connection.socketChannel}")
+    }
 
-        val socketChannel = newConnection.socketChannel
-        socketChannel.configureBlocking(false)
-        socketChannel.register(this.readSelector, SelectionKey.OP_READ, newConnection)
-        socketChannel.register(this.writeSelector, SelectionKey.OP_WRITE, newConnection)
+    fun newReadableEvent(readableEvent: ReadableEvent) {
 
-        this.socketMap.put(newConnection.sockerId, newConnection.socketChannel)
+    }
+
+    fun newWriteableEvent(writeableEvent: WriteableEvent) {
+
     }
 
     override fun run() {
         initialize()
 
         while (true) {
+            val event = eventQueue.take()
 
+            when (event) {
+                is AccetpEvent -> newConnection(event)
+                is ReadableEvent -> newReadableEvent(event)
+                is WriteableEvent -> newWriteableEvent(event)
+            }
         }
     }
 

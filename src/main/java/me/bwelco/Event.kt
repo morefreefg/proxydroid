@@ -1,15 +1,7 @@
 package me.bwelco
 
-sealed class Event()
+sealed class Event(val connection: Connection)
 
-class AccetpEvent: Event() {
-
-}
-
-class ReadableEvent: Event() {
-
-}
-
-class WriteableEvent: Event() {
-
-}
+class AccetpEvent(connection: Connection): Event(connection)
+class ReadableEvent(connection: Connection): Event(connection)
+class WriteableEvent(connection: Connection): Event(connection)

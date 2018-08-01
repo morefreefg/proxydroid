@@ -7,11 +7,11 @@ import java.util.concurrent.LinkedBlockingQueue
 class Server {
 
     companion object {
-        val connectionQueue = LinkedBlockingQueue<Connection>()
+        val eventQueue = LinkedBlockingQueue<Event>()
     }
 
     fun start(port: Int) {
-        Thread(ServerEventProdiver(port, connectionQueue)).start()
-        Thread(ConnectionRunnable(connectionQueue)).start()
+        Thread(ServerEventProdiver(port, eventQueue)).start()
+        Thread(ConnectionRunnable(eventQueue)).start()
     }
 }

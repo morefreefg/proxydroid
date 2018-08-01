@@ -1,7 +1,8 @@
 package me.bwelco.worker
 
-import jdk.management.resource.internal.inst.SocketRMHooks
+import me.bwelco.AccetpEvent
 import me.bwelco.Connection
+import me.bwelco.Event
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
@@ -11,7 +12,7 @@ import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.LinkedBlockingQueue
 
-class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Connection>) : Runnable {
+class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Event>) : Runnable {
 
     /**
      * start incoming socket ids from 16K - reserve bottom ids for pre-defined sockets (servers).
@@ -20,14 +21,18 @@ class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Connecti
     private lateinit var serverSocketChannel: ServerSocketChannel
 
     private lateinit var selector: Selector
-	private val readBuffer = ByteBuffer.allocate(8912);
+	private val readBuffer = ByteBuffer.allocate(8912)
 
     fun accept(selectionKey: SelectionKey) {
-        val socketChannel = serverSocketChannel.accept()
-        println(socketChannel)
-        socketChannel.configureBlocking(false)
-        socketChannel.register(selector, SelectionKey.OP_READ or SelectionKey.OP_WRITE, socketId++)
+        val newSocketChannel = serverSocketChannel.accept()
 
+        val newSocketId = socketId++
+        val accetpEvent = AccetpEvent(Connection(newSocketChannel, newSocketId))
+
+        newSocketChannel.configureBlocking(false)
+        newSocketChannel.register(selector, SelectionKey.OP_READ or SelectionKey.OP_WRITE, accetpEvent)
+
+        queue.put(accetpEvent)
     }
 
     fun read(selectionKey: SelectionKey) {
@@ -64,6 +69,8 @@ class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Connecti
         this.serverSocketChannel.configureBlocking(false)
         this.serverSocketChannel.socket().bind(InetSocketAddress(port))
         this.serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT)
+
+        println("server start working at: $port")
 
         while (true) {
             selector.select()
