@@ -9,10 +9,9 @@ import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.ServerSocketChannel
-import java.nio.channels.SocketChannel
 import java.util.concurrent.LinkedBlockingQueue
 
-class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Event>) : Runnable {
+class ServerWorker(val port: Int, val readProcessor: ReadProcessor) : Runnable {
 
     /**
      * start incoming socket ids from 16K - reserve bottom ids for pre-defined sockets (servers).
@@ -21,6 +20,7 @@ class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Event>) 
     private lateinit var serverSocketChannel: ServerSocketChannel
 
     private lateinit var selector: Selector
+
 	private val readBuffer = ByteBuffer.allocate(8912)
 
     fun accept(selectionKey: SelectionKey) {
@@ -30,13 +30,20 @@ class ServerEventProdiver(val port: Int, val queue: LinkedBlockingQueue<Event>) 
         val accetpEvent = AccetpEvent(Connection(newSocketChannel, newSocketId))
 
         newSocketChannel.configureBlocking(false)
-        newSocketChannel.register(selector, SelectionKey.OP_READ or SelectionKey.OP_WRITE, accetpEvent)
-
-        queue.put(accetpEvent)
+        newSocketChannel.register(selector, SelectionKey.OP_READ or SelectionKey.OP_WRITE, accetpEvent.connection)
     }
 
     fun read(selectionKey: SelectionKey) {
-        val socketChannel = selectionKey.channel() as SocketChannel
+        val connection = selectionKey.attachment() as Connection
+
+        if (connection.isBusy) {
+            return
+        }
+
+        connection.isBusy = true
+
+        val socketChannel = connection.socketChannel
+
         readBuffer.clear()
 
         var numRead = 0

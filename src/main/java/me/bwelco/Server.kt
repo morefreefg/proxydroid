@@ -1,17 +1,12 @@
 package me.bwelco
 
-import me.bwelco.worker.ServerEventProdiver
-import me.bwelco.worker.ConnectionRunnable
+import me.bwelco.worker.S5ReadProcessor
+import me.bwelco.worker.ServerWorker
 import java.util.concurrent.LinkedBlockingQueue
 
 class Server {
 
-    companion object {
-        val eventQueue = LinkedBlockingQueue<Event>()
-    }
-
     fun start(port: Int) {
-        Thread(ServerEventProdiver(port, eventQueue)).start()
-        Thread(ConnectionRunnable(eventQueue)).start()
+        Thread(ServerWorker(port, S5ReadProcessor())).start()
     }
 }
