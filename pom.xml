@@ -24,6 +24,12 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.28.Final</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
