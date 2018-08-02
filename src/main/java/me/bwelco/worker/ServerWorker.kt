@@ -21,8 +21,6 @@ class ServerWorker(val port: Int, val readProcessor: ReadProcessor) : Runnable {
 
     private lateinit var selector: Selector
 
-	private val readBuffer = ByteBuffer.allocate(8912)
-
     fun accept(selectionKey: SelectionKey) {
         val newSocketChannel = serverSocketChannel.accept()
 
@@ -35,32 +33,9 @@ class ServerWorker(val port: Int, val readProcessor: ReadProcessor) : Runnable {
 
     fun read(selectionKey: SelectionKey) {
         val connection = selectionKey.attachment() as Connection
-
-        if (connection.isBusy) {
-            return
-        }
-
-        connection.isBusy = true
-
         val socketChannel = connection.socketChannel
-
-        readBuffer.clear()
-
-        var numRead = 0
-        try {
-            numRead = socketChannel.read(readBuffer)
-        } catch (e: IOException) {
+        readProcessor.read(connection) {
             selectionKey.cancel()
-            socketChannel.close()
-            println("close by exception: $socketChannel")
-            return
-        }
-
-        if (numRead == -1) {
-            socketChannel.close()
-            selectionKey.cancel()
-            println("close by shutdown: $socketChannel")
-            return
         }
     }
 

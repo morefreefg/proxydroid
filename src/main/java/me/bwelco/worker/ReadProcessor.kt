@@ -1,7 +1,8 @@
 package me.bwelco.worker
 
-import java.sql.Connection
+import me.bwelco.Connection
+
 
 interface ReadProcessor {
-    fun read(connection: Connection)
+    fun read(connection: Connection, onError: (Exception) -> Unit)
 }
