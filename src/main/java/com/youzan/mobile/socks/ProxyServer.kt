@@ -23,6 +23,9 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import java.net.Socket
 
+fun main(args: Array<String>) {
+
+}
 
 class ProxyServer {
 
