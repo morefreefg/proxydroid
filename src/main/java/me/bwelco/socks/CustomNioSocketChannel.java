@@ -1,14 +1,7 @@
 package me.bwelco.socks;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOutboundBuffer;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.EventLoop;
-import io.netty.channel.FileRegion;
-import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.nio.AbstractNioByteChannel;
 import io.netty.channel.socket.DefaultSocketChannelConfig;
 import io.netty.channel.socket.ServerSocketChannel;

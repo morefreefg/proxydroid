@@ -1,10 +1,10 @@
 package me.bwelco.socks.inner
 
-import me.bwelco.socks.CustomNioSocketChannel
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.concurrent.Promise
+import me.bwelco.socks.CustomNioSocketChannel
 import java.net.Socket
 
 class DirectClientHandler(val promise: Promise<Channel>,

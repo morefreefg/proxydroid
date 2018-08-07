@@ -1,14 +1,14 @@
 package me.bwelco.socks.init
 
-import me.bwelco.socks.Socks5CommandRequestHandler
-import me.bwelco.socks.Socks5InitialRequestHandler
-import me.bwelco.socks.SocksServerConfig
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequestDecoder
 import io.netty.handler.codec.socksx.v5.Socks5InitialRequestDecoder
 import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder
+import me.bwelco.socks.Socks5CommandRequestHandler
+import me.bwelco.socks.Socks5InitialRequestHandler
+import me.bwelco.socks.SocksServerConfig
 import java.net.Socket
 
 class Socks5ServerInitializer(private val bossGroup: NioEventLoopGroup,
