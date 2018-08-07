@@ -1,4 +1,4 @@
-package com.youzan.mobile.socks.inner
+package me.bwelco.socks.inner
 
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
@@ -65,7 +65,7 @@ class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelIn
     }
 
     companion object {
-        fun newInstance(connectListener: (Socket) -> Unit):SocksServerHandler {
+        fun newInstance(connectListener: (Socket) -> Unit): SocksServerHandler {
             return SocksServerHandler(connectListener)
         }
     }

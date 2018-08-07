@@ -1,9 +1,8 @@
-package com.youzan.mobile.socks.inner
+package me.bwelco.socks.inner
 
-import com.youzan.mobile.socks.CustomNioSocketChannel
+import me.bwelco.socks.CustomNioSocketChannel
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
-import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.socksx.SocksMessage
 import io.netty.handler.codec.socksx.v4.DefaultSocks4CommandResponse
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
@@ -11,8 +10,6 @@ import io.netty.handler.codec.socksx.v4.Socks4CommandStatus
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
-import io.netty.util.concurrent.Future
-import io.netty.util.concurrent.FutureListener
 import java.net.Socket
 
 @ChannelHandler.Sharable

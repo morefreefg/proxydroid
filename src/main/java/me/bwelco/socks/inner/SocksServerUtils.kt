@@ -1,4 +1,4 @@
-package com.youzan.mobile.socks.inner
+package me.bwelco.socks.inner
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel

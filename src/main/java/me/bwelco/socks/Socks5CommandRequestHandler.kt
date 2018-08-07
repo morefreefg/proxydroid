@@ -1,11 +1,10 @@
-package com.youzan.mobile.socks
+package me.bwelco.socks
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.socksx.v5.*
 import java.net.Socket
-import java.sql.ClientInfoStatus
 
 class Socks5CommandRequestHandler(val bossGroup: EventLoopGroup,
                                   val onConnect: (Socket) -> Unit): SimpleChannelInboundHandler<DefaultSocks5CommandRequest>() {

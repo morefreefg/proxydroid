@@ -1,4 +1,4 @@
-package com.youzan.mobile.socks
+package me.bwelco.socks
 
 import java.net.InetAddress
 

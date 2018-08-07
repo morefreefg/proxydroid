@@ -1,4 +1,4 @@
-package com.youzan.mobile.socks
+package me.bwelco.socks
 
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelHandlerContext
@@ -14,10 +14,8 @@ import io.netty.handler.codec.socksx.v5.Socks5ServerEncoder
 import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
 import java.lang.Exception
-import android.R.attr.port
-import android.util.Log
-import com.youzan.mobile.socks.init.Socks5ServerInitializer
-import com.youzan.mobile.socks.inner.SocksServerInitializer
+import me.bwelco.socks.init.Socks5ServerInitializer
+import me.bwelco.socks.inner.SocksServerInitializer
 import io.netty.channel.ChannelFuture
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler

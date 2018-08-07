@@ -1,8 +1,8 @@
-package com.youzan.mobile.socks.init
+package me.bwelco.socks.init
 
-import com.youzan.mobile.socks.Socks5CommandRequestHandler
-import com.youzan.mobile.socks.Socks5InitialRequestHandler
-import com.youzan.mobile.socks.SocksServerConfig
+import me.bwelco.socks.Socks5CommandRequestHandler
+import me.bwelco.socks.Socks5InitialRequestHandler
+import me.bwelco.socks.SocksServerConfig
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
