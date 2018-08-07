@@ -1,4 +1,4 @@
-package me.bwelco.socks.inner
+package me.bwelco.socks.s5
 
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext

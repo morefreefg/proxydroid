@@ -1,4 +1,4 @@
-package me.bwelco.socks.inner
+package me.bwelco.socks.s5
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
