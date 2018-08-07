@@ -1,4 +1,4 @@
-package me.bwelco.socks.s5
+package me.bwelco.proxy.s5
 
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel

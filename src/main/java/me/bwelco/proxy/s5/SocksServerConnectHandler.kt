@@ -1,4 +1,4 @@
-package me.bwelco.socks.s5
+package me.bwelco.proxy.s5
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
@@ -9,7 +9,7 @@ import io.netty.handler.codec.socksx.v4.Socks4CommandStatus
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
-import me.bwelco.socks.CustomNioSocketChannel
+import me.bwelco.proxy.CustomNioSocketChannel
 import java.net.Socket
 
 @ChannelHandler.Sharable

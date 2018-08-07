@@ -1,14 +1,14 @@
-package me.bwelco.socks.s5
+package me.bwelco.proxy.s5
 
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.concurrent.Promise
-import me.bwelco.socks.CustomNioSocketChannel
+import me.bwelco.proxy.CustomNioSocketChannel
 import java.net.Socket
 
-class DirectClientHandler(val promise: Promise<Channel>,
-                          val connectListener: (Socket) -> Unit): ChannelInboundHandlerAdapter() {
+class HttpMitmInitializer(val promise: Promise<Channel>,
+                          val connectListener: (Socket) -> Unit) : ChannelInboundHandlerAdapter() {
 
     override fun channelRegistered(ctx: ChannelHandlerContext?) {
         if (ctx == null) return
@@ -21,7 +21,4 @@ class DirectClientHandler(val promise: Promise<Channel>,
         promise.setSuccess(ctx.channel())
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        promise.setFailure(cause)
-    }
 }

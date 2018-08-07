@@ -1,4 +1,4 @@
-package me.bwelco.socks;
+package me.bwelco.proxy;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
