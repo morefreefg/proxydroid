@@ -15,96 +15,30 @@ import java.net.Socket
 @ChannelHandler.Sharable
 class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleChannelInboundHandler<SocksMessage>() {
 
-    val b = Bootstrap()
+    val bootstrap: Bootstrap by lazy { Bootstrap() }
 
     override fun channelRead0(ctx: ChannelHandlerContext?, message: SocksMessage?) {
         if (message == null || ctx == null) return
+        val inboundChannel = ctx.channel()
 
         when(message) {
-            is Socks4CommandRequest -> {
-                val request = message
-                val promise = ctx.executor().newPromise<Channel>()
-                promise.addListener { future ->
-                    val outboundChannel = future.now as Channel
-                    if (future.isSuccess) {
-                        val responseFuture = ctx.channel().writeAndFlush(
-                                DefaultSocks4CommandResponse(Socks4CommandStatus.SUCCESS))
-
-                        responseFuture.addListener {
-                            ctx.pipeline().remove(this@SocksServerConnectHandler)
-                            outboundChannel.pipeline().addLast(RelayHandler(ctx.channel()))
-                            ctx.pipeline().addLast(RelayHandler(outboundChannel))
-                        }
-                    } else {
-                        ctx.channel().writeAndFlush(
-                                DefaultSocks4CommandResponse(Socks4CommandStatus.REJECTED_OR_FAILED))
-                        SocksServerUtils.closeOnFlush(ctx.channel())
-                    }
-                }
-
-                val inboundChannel = ctx.channel()
-                b.group(inboundChannel.eventLoop())
-                        .channel(CustomNioSocketChannel::class.java)
-                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
-                        .handler(DirectClientHandler(promise, connectListener))
-
-                b.connect(request.dstAddr(), request.dstPort()).addListener { future ->
-                    if (future.isSuccess) {
-                        // Connection established use handler provided results
-                    } else {
-                        // Close the connection if the connection attempt has failed.
-                        ctx.channel().writeAndFlush(
-                                DefaultSocks4CommandResponse(Socks4CommandStatus.REJECTED_OR_FAILED)
-                        )
-                        SocksServerUtils.closeOnFlush(ctx.channel())
-                    }
-                }
-            }
-
             is Socks5CommandRequest -> {
                 val request = message
-                val promise = ctx.executor().newPromise<Channel>()
-                promise.addListener { future ->
-                    val outboundChannel = future.now as Channel
-                    if (future.isSuccess) {
-                        val responseFuture = ctx.channel().writeAndFlush(DefaultSocks5CommandResponse(
-                                Socks5CommandStatus.SUCCESS,
-                                request.dstAddrType(),
-                                request.dstAddr(),
-                                request.dstPort()))
 
-                        responseFuture.addListener {
-                            ctx.pipeline().remove(this@SocksServerConnectHandler)
-                            outboundChannel.pipeline().addLast(RelayHandler(ctx.channel()))
-                            ctx.pipeline().addLast(RelayHandler(outboundChannel))
-                        }
-                    } else {
-                        ctx.channel().writeAndFlush(DefaultSocks5CommandResponse(
-                                Socks5CommandStatus.FAILURE, request.dstAddrType()))
-                        SocksServerUtils.closeOnFlush(ctx.channel())
-                    }
-                }
-
-                val inboundChannel = ctx.channel()
-                b.group(inboundChannel.eventLoop())
+                bootstrap.group(inboundChannel.eventLoop())
                         .channel(CustomNioSocketChannel::class.java)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                         .option(ChannelOption.SO_KEEPALIVE, true)
-                        .handler(DirectClientHandler(promise, connectListener))
+                        .handler(DirectClientHandler(inboundChannel, request))
 
-                b.connect(request.dstAddr(), request.dstPort()).addListener { future ->
-                    if (future.isSuccess) {
-                        // Connection established use handler provided results
-                    } else {
-                        // Close the connection if the connection attempt has failed.
-                        ctx.channel().writeAndFlush(
-                                DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()))
-                        SocksServerUtils.closeOnFlush(ctx.channel())
+                bootstrap.connect(request.dstAddr(), request.dstPort()).addListener {
+                    if (it?.isSuccess?:false) {
+                        inboundChannel.pipeline().remove(this)
                     }
                 }
             }
 
+            is Socks4CommandRequest -> ctx.close()
             else -> ctx.close()
         }
     }
