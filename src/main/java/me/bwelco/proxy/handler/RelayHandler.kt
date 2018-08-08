@@ -1,10 +1,11 @@
-package me.bwelco.proxy.s5
+package me.bwelco.proxy.handler
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.ReferenceCountUtil
+import me.bwelco.proxy.s5.SocksServerUtils
 
 class RelayHandler(val relayChannel: Channel): ChannelInboundHandlerAdapter() {
 

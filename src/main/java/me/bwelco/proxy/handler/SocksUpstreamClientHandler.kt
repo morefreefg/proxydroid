@@ -7,12 +7,17 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.s5.SocksServerUtils
+import me.bwelco.proxy.upstream.s5.SocksClientInitializer
 import me.bwelco.proxy.util.addFutureListener
+import java.net.Inet4Address
 
-class DirectClientHandler(val request: Socks5CommandRequest) : ChannelInboundHandlerAdapter() {
+class SocksUpstreamClientHandler(val request: Socks5CommandRequest) : ChannelInboundHandlerAdapter() {
 
-    private val bootstrap: Bootstrap by lazy { Bootstrap() }
+    val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
+
+    val remoteSocks5Server = Inet4Address.getByName("58.20.41.172")
+    val remoteSocks5ServerPort = 1080
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         val clientChannel = ctx.channel()
@@ -24,7 +29,7 @@ class DirectClientHandler(val request: Socks5CommandRequest) : ChannelInboundHan
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(ConnectHandler())
 
-        bootstrap.connect(request.dstAddr(), request.dstPort()).addFutureListener {
+        bootstrap.connect(remoteSocks5Server, remoteSocks5ServerPort).addFutureListener {
             if (it.isSuccess) thisClientHandlerCtx.channel().pipeline().remove(this)
         }
     }
@@ -43,10 +48,11 @@ class DirectClientHandler(val request: Socks5CommandRequest) : ChannelInboundHan
             responseFuture.addFutureListener {
                 if (it.isSuccess) {
                     outboundChannel.pipeline().remove(this)
+                    // start to relay by socks5 upstream
+                    outboundChannel.pipeline().addLast(SocksClientInitializer(thisClientHandlerCtx.channel(), request))
+                    outboundChannel.pipeline().fireChannelRegistered()
+                    outboundChannel.pipeline().fireChannelActive()
 
-                    // start to relay data transparently
-                    outboundChannel.pipeline().addLast(RelayHandler(thisClientHandlerCtx.channel()))
-                    thisClientHandlerCtx.channel().pipeline().addLast(RelayHandler(outboundChannel))
                 } else {
                     exceptionCaught(thisClientHandlerCtx, it.cause())
                 }

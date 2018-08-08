@@ -9,6 +9,8 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.handler.DirectClientHandler
+import me.bwelco.proxy.handler.SocksUpstreamClientHandler
+import me.bwelco.proxy.upstream.s5.SocksClientInitializer
 import java.net.Socket
 
 @ChannelHandler.Sharable
@@ -21,51 +23,11 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
 
         when(message) {
             is Socks5CommandRequest -> {
-                val request = message
+//                clientCtx.pipeline().addLast(DirectClientHandler(message))
+                clientCtx.pipeline().addLast(SocksUpstreamClientHandler(message))
 
-                bootstrap.group(inboundChannel.eventLoop())
-                        .channel(CustomNioSocketChannel::class.java)
-                        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
-                        .handler(object : ChannelInboundHandlerAdapter() {
-                            override fun channelActive(serverCtx: ChannelHandlerContext) {
-
-                                val connectResultHandler = this
-
-                                val outboundChannel = serverCtx.channel()
-
-                                val responseFuture = inboundChannel.writeAndFlush(DefaultSocks5CommandResponse(
-                                        Socks5CommandStatus.SUCCESS,
-                                        request.dstAddrType(),
-                                        request.dstAddr(),
-                                        request.dstPort()))
-
-                                responseFuture.addListener(object : ChannelFutureListener {
-                                    override fun operationComplete(future: ChannelFuture) {
-                                        if (future.isSuccess) {
-                                            outboundChannel.pipeline().remove(connectResultHandler)
-                                            outboundChannel.pipeline().addLast(DirectClientHandler(inboundChannel))
-                                            outboundChannel.pipeline().fireChannelRegistered()
-                                            outboundChannel.pipeline().fireChannelActive()
-                                        } else {
-                                            exceptionCaught(serverCtx, future.cause())
-                                        }
-                                    }
-                                })
-                            }
-
-                            override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-                                inboundChannel.writeAndFlush(
-                                        DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()))
-                                SocksServerUtils.closeOnFlush(inboundChannel)
-                            }
-                        })
-
-                bootstrap.connect(request.dstAddr(), request.dstPort()).addListener {
-                    if (it?.isSuccess?:false) {
-                        inboundChannel.pipeline().remove(this)
-                    }
-                }
+                clientCtx.pipeline().fireChannelRegistered()
+                clientCtx.pipeline().fireChannelActive()
             }
 
             is Socks4CommandRequest -> clientCtx.close()
