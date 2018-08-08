@@ -10,13 +10,11 @@ import java.net.Socket
 class HttpMitmInitializer(val promise: Promise<Channel>,
                           val connectListener: (Socket) -> Unit) : ChannelInboundHandlerAdapter() {
 
-    override fun channelRegistered(ctx: ChannelHandlerContext?) {
-        if (ctx == null) return
+    override fun channelRegistered(ctx: ChannelHandlerContext) {
         connectListener((ctx.channel() as CustomNioSocketChannel).rawSocket)
     }
 
-    override fun channelActive(ctx: ChannelHandlerContext?) {
-        if (ctx == null) return
+    override fun channelActive(ctx: ChannelHandlerContext) {
         ctx.pipeline().remove(this)
         promise.setSuccess(ctx.channel())
     }

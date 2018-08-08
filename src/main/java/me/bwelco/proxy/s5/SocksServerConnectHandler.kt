@@ -17,8 +17,7 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
 
     val bootstrap: Bootstrap by lazy { Bootstrap() }
 
-    override fun channelRead0(ctx: ChannelHandlerContext?, message: SocksMessage?) {
-        if (message == null || ctx == null) return
+    override fun channelRead0(ctx: ChannelHandlerContext, message: SocksMessage) {
         val inboundChannel = ctx.channel()
 
         when(message) {
@@ -43,8 +42,8 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
         }
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        SocksServerUtils.closeOnFlush(ctx?.channel()!!)
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        SocksServerUtils.closeOnFlush(ctx.channel())
     }
 
 }

@@ -11,15 +11,10 @@ import java.net.Socket
 class DirectClientHandler(val clientChannel: Channel,
                           val request: Socks5CommandRequest): ChannelInboundHandlerAdapter() {
 
-    override fun channelRegistered(ctx: ChannelHandlerContext?) {
-        if (ctx == null) return
+    override fun channelRegistered(ctx: ChannelHandlerContext) {
     }
 
-    override fun channelActive(ctx: ChannelHandlerContext?) {
-        if (ctx == null) return
-
-        println("isconnected: ${ctx.channel().isActive}")
-
+    override fun channelActive(ctx: ChannelHandlerContext) {
         val outboundChannel = ctx.channel()
 
         val responseFuture = clientChannel.writeAndFlush(DefaultSocks5CommandResponse(
@@ -36,7 +31,7 @@ class DirectClientHandler(val clientChannel: Channel,
         outboundChannel.pipeline().remove(this)
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         clientChannel.writeAndFlush(
                 DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()))
         SocksServerUtils.closeOnFlush(clientChannel)

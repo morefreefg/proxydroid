@@ -8,11 +8,11 @@ import io.netty.util.ReferenceCountUtil
 
 class RelayHandler(val relayChannel: Channel): ChannelInboundHandlerAdapter() {
 
-    override fun channelActive(ctx: ChannelHandlerContext?) {
-        ctx?.writeAndFlush(Unpooled.EMPTY_BUFFER)
+    override fun channelActive(ctx: ChannelHandlerContext) {
+        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)
     }
 
-    override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?) {
+    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
         if (relayChannel.isActive) {
             relayChannel.writeAndFlush(msg)
         } else {
@@ -20,14 +20,14 @@ class RelayHandler(val relayChannel: Channel): ChannelInboundHandlerAdapter() {
         }
     }
 
-    override fun channelInactive(ctx: ChannelHandlerContext?) {
+    override fun channelInactive(ctx: ChannelHandlerContext) {
         if (relayChannel.isActive) {
             SocksServerUtils.closeOnFlush(relayChannel)
         }
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        cause?.printStackTrace()
-        ctx?.close()
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        cause.printStackTrace()
+        ctx.close()
     }
 }

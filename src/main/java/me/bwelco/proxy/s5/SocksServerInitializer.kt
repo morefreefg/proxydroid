@@ -8,13 +8,10 @@ import io.netty.handler.logging.LoggingHandler
 import java.net.Socket
 
 class SocksServerInitializer(val connectListener: (Socket) -> Unit): ChannelInitializer<SocketChannel>() {
-    override fun initChannel(ch: SocketChannel?) {
-        if (ch == null) return
-
+    override fun initChannel(ch: SocketChannel) {
         ch.pipeline().addLast(
                 LoggingHandler(LogLevel.DEBUG),
                 SocksPortUnificationServerHandler(),
                 SocksServerHandler.newInstance(connectListener))
     }
-
 }

@@ -12,7 +12,6 @@ class HttpProcessorInitializer(val clientChannel: Channel,
     override fun initChannel(serverChannel: SocketChannel) {
         connectFuture.addListener { future ->
             if (future.isSuccess) {
-                println("success here 2")
                 clientChannel.pipeline().addLast(RelayHandler(serverChannel))
                 serverChannel.pipeline().addLast(RelayHandler(clientChannel))
             }

@@ -13,8 +13,7 @@ import java.net.Socket
 @ChannelHandler.Sharable
 class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelInboundHandler<SocksMessage>() {
 
-    override fun channelRead0(ctx: ChannelHandlerContext?,  socksRequest: SocksMessage?) {
-        if (socksRequest == null || ctx == null) return
+    override fun channelRead0(ctx: ChannelHandlerContext,  socksRequest: SocksMessage) {
 
         when(socksRequest.version()) {
             SocksVersion.SOCKS4a -> {
@@ -49,19 +48,18 @@ class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelIn
                     ctx.close()
                 }
             }
-            SocksVersion.UNKNOWN -> {
-                ctx.close()
-            }
+            SocksVersion.UNKNOWN -> ctx.close()
+            else -> ctx.close()
         }
     }
 
-    override fun channelReadComplete(ctx: ChannelHandlerContext?) {
-        ctx?.flush()
+    override fun channelReadComplete(ctx: ChannelHandlerContext) {
+        ctx.flush()
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        cause?.printStackTrace()
-        SocksServerUtils.closeOnFlush(ctx?.channel()!!)
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        cause.printStackTrace()
+        SocksServerUtils.closeOnFlush(ctx.channel())
     }
 
     companion object {
