@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.socksx.v5.*
+import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.handler.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
 
@@ -13,7 +14,7 @@ import me.bwelco.proxy.util.addFutureListener
  */
 class SocksClientInitializer(val downStreamChannel: Channel,
                              val request: Socks5CommandRequest,
-                             val successListener: (Boolean) -> Unit ): ChannelInboundHandlerAdapter() {
+                             val promise: Promise<Channel>): ChannelInboundHandlerAdapter() {
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         val inBoundChannel = ctx.channel()
@@ -49,7 +50,7 @@ class SocksClientInitializer(val downStreamChannel: Channel,
         override fun channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5CommandResponse) {
             if (msg.decoderResult().isSuccess) {
 
-                successListener(true)
+                promise.setSuccess(ctx.channel())
                 val upstreamChannel = ctx.channel()
                 upstreamChannel.pipeline().remove(this)
 
@@ -57,6 +58,10 @@ class SocksClientInitializer(val downStreamChannel: Channel,
                 downStreamChannel.pipeline().addLast(RelayHandler(upstreamChannel))
             }
         }
+    }
 
+    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
+        super.exceptionCaught(ctx, cause)
+        promise.setFailure(cause)
     }
 }

@@ -1,11 +1,16 @@
 package me.bwelco.proxy.s5
 
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.socksx.SocksMessage
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
+import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
+import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
+import io.netty.util.concurrent.Promise
+import me.bwelco.proxy.handler.DirectClientHandler
 import me.bwelco.proxy.handler.SocksUpstreamClientHandler
 import java.net.Socket
 
@@ -16,8 +21,24 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
 
         when(message) {
             is Socks5CommandRequest -> {
+
+                val commandResponsePromise: Promise<Channel> = clientCtx.executor().newPromise()
+                commandResponsePromise.addListener { future ->
+                    if (future.isSuccess) {
+                        clientCtx.writeAndFlush(DefaultSocks5CommandResponse(
+                                Socks5CommandStatus.SUCCESS,
+                                message.dstAddrType(),
+                                message.dstAddr(),
+                                message.dstPort()))
+                    } else {
+                        clientCtx.channel().writeAndFlush(
+                                DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, message.dstAddrType()))
+                        SocksServerUtils.closeOnFlush(clientCtx.channel())
+                    }
+                }
+
                 clientCtx.pipeline().remove(this)
-                clientCtx.pipeline().addLast(SocksUpstreamClientHandler(message))
+                clientCtx.pipeline().addLast(DirectClientHandler(message, commandResponsePromise))
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()

@@ -1,6 +1,7 @@
 package me.bwelco.proxy.handler
 
 import io.netty.bootstrap.Bootstrap
+import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelOption
@@ -9,19 +10,21 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.s5.SocksServerUtils
 import me.bwelco.proxy.upstream.s5.SocksClientInitializer
 import me.bwelco.proxy.util.addFutureListener
 import java.net.Inet4Address
 
-class SocksUpstreamClientHandler(val request: Socks5CommandRequest) : ChannelInboundHandlerAdapter() {
+class SocksUpstreamClientHandler(val request: Socks5CommandRequest,
+                                 val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
 
     val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
 
-    val remoteSocks5Server = Inet4Address.getByName("172.17.13.60")
-    val remoteSocks5ServerPort = 6153
+    val remoteSocks5Server = Inet4Address.getByName("58.20.41.172")
+    val remoteSocks5ServerPort = 1080
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         val clientChannel = ctx.channel()
@@ -35,7 +38,8 @@ class SocksUpstreamClientHandler(val request: Socks5CommandRequest) : ChannelInb
                 .handler(ConnectHandler())
 
         bootstrap.connect(remoteSocks5Server, remoteSocks5ServerPort).addFutureListener {
-            if (it.isSuccess) thisClientHandlerCtx.channel().pipeline().remove(this)
+            if (it.isSuccess)
+                thisClientHandlerCtx.channel().pipeline().remove(this)
         }
     }
 
@@ -43,28 +47,13 @@ class SocksUpstreamClientHandler(val request: Socks5CommandRequest) : ChannelInb
         override fun channelActive(ctx: ChannelHandlerContext) {
 
             val outboundChannel = ctx.channel()
-
-            outboundChannel.pipeline().addLast(SocksClientInitializer(thisClientHandlerCtx.channel(), request) { success ->
-                if (success) {
-                    thisClientHandlerCtx.channel().writeAndFlush(DefaultSocks5CommandResponse(
-                            Socks5CommandStatus.SUCCESS,
-                            request.dstAddrType(),
-                            request.dstAddr(),
-                            request.dstPort()))
-                } else {
-                    exceptionCaught(thisClientHandlerCtx, Throwable("remote fail"))
-                }
-            })
-
+            outboundChannel.pipeline().addLast(SocksClientInitializer(thisClientHandlerCtx.channel(), request, promise))
             outboundChannel.pipeline().remove(this)
             outboundChannel.pipeline().fireChannelActive()
         }
 
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-            thisClientHandlerCtx.channel().writeAndFlush(
-                    DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()))
-            SocksServerUtils.closeOnFlush(thisClientHandlerCtx.channel())
-            SocksServerUtils.closeOnFlush(ctx.channel())
+            promise.setFailure(cause)
         }
     }
 }
