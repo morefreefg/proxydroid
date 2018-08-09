@@ -10,8 +10,7 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.handler.DirectClientHandler
-import me.bwelco.proxy.handler.SocksUpstreamClientHandler
+import me.bwelco.proxy.proxy.DirectClientProxy
 import java.net.Socket
 
 @ChannelHandler.Sharable
@@ -38,7 +37,7 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
                 }
 
                 clientCtx.pipeline().remove(this)
-                clientCtx.pipeline().addLast(DirectClientHandler(message, commandResponsePromise))
+                clientCtx.pipeline().addLast(DirectClientProxy(message, commandResponsePromise))
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()

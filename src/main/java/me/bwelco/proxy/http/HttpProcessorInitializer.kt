@@ -4,7 +4,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
-import me.bwelco.proxy.handler.RelayHandler
+import me.bwelco.proxy.upstream.RelayHandler
 
 class HttpProcessorInitializer(val clientChannel: Channel,
                                val connectFuture: ChannelFuture) : ChannelInitializer<SocketChannel>() {
