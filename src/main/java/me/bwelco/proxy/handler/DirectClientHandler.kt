@@ -1,7 +1,9 @@
 package me.bwelco.proxy.handler
 
 import io.netty.bootstrap.Bootstrap
-import io.netty.channel.*
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelOption
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus

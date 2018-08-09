@@ -10,7 +10,7 @@ import java.net.Socket
 class SocksServerInitializer(val connectListener: (Socket) -> Unit): ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
         ch.pipeline().addLast(
-                LoggingHandler(LogLevel.DEBUG),
+                LoggingHandler(LogLevel.INFO),
                 SocksPortUnificationServerHandler(),
                 SocksServerHandler.newInstance(connectListener))
     }
