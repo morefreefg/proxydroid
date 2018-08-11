@@ -2,10 +2,9 @@ package me.bwelco.proxy.proxy
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
-import io.netty.handler.codec.http.HttpResponse
-import io.netty.handler.codec.http.HttpResponseDecoder
-import io.netty.handler.codec.http.HttpResponseEncoder
+import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
+import io.netty.handler.logging.LoggingHandler
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.upstream.RelayHandler
@@ -39,15 +38,19 @@ class HttpUpstreamProxy(val request: Socks5CommandRequest,
             promise.setSuccess(ctx.channel())
 
             outboundChannel.pipeline().remove(this)
-            // start to relay data transparently
 
-            outboundChannel.pipeline().addFirst("HttpResponseDecoder", HttpResponseDecoder())
-            outboundChannel.pipeline().addAfter("HttpResponseDecoder", "HttpHandler", HttpHandler())
-            outboundChannel.pipeline().addAfter("HttpHandler", "RelayHandler", RelayHandler(thisClientHandlerCtx.channel()))
+            // hook http message
+            val outerPipeline = outboundChannel.pipeline()
 
-//            outboundChannel.pipeline().addLast(RelayHandler(thisClientHandlerCtx.channel()))
+            outerPipeline.addLast(LoggingHandler())
+            outerPipeline.addLast(HttpResponseDecoder())
+            outerPipeline.addLast(HttpHandler())
+            outerPipeline.addLast(RelayHandler(thisClientHandlerCtx.channel()))
 
+            thisClientHandlerCtx.channel().pipeline().addLast(HttpResponseEncoder())
             thisClientHandlerCtx.channel().pipeline().addLast(RelayHandler(outboundChannel))
+
+            outboundChannel.pipeline().fireChannelActive()
         }
 
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
@@ -55,11 +58,24 @@ class HttpUpstreamProxy(val request: Socks5CommandRequest,
         }
     }
 
-    inner class HttpHandler: SimpleChannelInboundHandler<HttpResponse>(false) {
-        override fun channelRead0(ctx: ChannelHandlerContext, msg: HttpResponse) {
-            if (msg.decoderResult().isSuccess) {
-                println(msg.headers())
+    inner class HttpHandler: ChannelInboundHandlerAdapter() {
+
+        val message = java.lang.String("Fucking Silly Baidu").getBytes()
+
+        override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+            if (msg is HttpResponse) {
+                ctx.fireChannelRead(DefaultHttpResponse(msg.protocolVersion(),
+                        msg.status(), msg.headers().set("Content-Type", "text/plain").set("Content-Length", message.size + 1)))
+                return
+            } else if (msg is HttpContent) {
+                val hookedMessage = msg.copy() as DefaultLastHttpContent
+                hookedMessage.content().clear()
+                hookedMessage.content().writeBytes(message)
+                hookedMessage.content().writeByte(0x0a)
+                ctx.fireChannelRead(hookedMessage)
+                return
             }
+
             ctx.fireChannelRead(msg)
         }
     }
