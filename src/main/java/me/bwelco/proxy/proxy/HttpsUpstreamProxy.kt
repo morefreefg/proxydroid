@@ -1,26 +1,24 @@
 package me.bwelco.proxy.proxy
 
 import io.netty.bootstrap.Bootstrap
-import io.netty.buffer.ByteBuf
-import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelOption
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
-import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.SslHandler
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
+import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.tls.SSLFactory
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
 
 class HttpsUpstreamProxy(val request: Socks5CommandRequest,
-                         val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
+                         val promise: Promise<Channel>,
+                         val interceptors: List<HttpInterceptor> = listOf()) : ChannelInboundHandlerAdapter() {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
@@ -35,7 +33,7 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(ConnectHandler())
 
-        bootstrap.connect(request.dstAddr(), 80).addFutureListener {
+        bootstrap.connect(request.dstAddr(), request.dstPort()).addFutureListener {
             if (it.isSuccess) thisClientHandlerCtx.channel().pipeline().remove(this)
         }
     }
@@ -48,10 +46,12 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
             outboundChannel.pipeline().remove(this)
             // start to relay data transparently
 
-            val sslCtx = SslContextBuilder
+            val downStreamSSLContext = SslContextBuilder
                     .forServer(SSLFactory.certConfig.serverPrivateKey,
                             SSLFactory.newCert(request.dstAddr()))
                     .build()
+
+            val upstreamSSLContext = SslContextBuilder.forClient().build()
 
             // hook https message
             val outerPipeline = outboundChannel.pipeline()
@@ -59,10 +59,11 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
 
             outerPipeline.addLast(LoggingHandler())
             outerPipeline.addLast(HttpResponseDecoder())
-            outerPipeline.addLast(HttpHandler())
+//            outerPipeline.addLast(HttpHandler())
             outerPipeline.addLast(RelayHandler(thisClientHandlerCtx.channel()))
+            outerPipeline.addFirst("sslHandler", upstreamSSLContext.newHandler(outboundChannel.alloc()))
 
-            thisClientHandlerCtx.pipeline().addFirst("sslHandler", sslCtx.newHandler(ctx.alloc()))
+            thisClientHandlerCtx.pipeline().addFirst("sslHandler", downStreamSSLContext.newHandler(ctx.alloc()))
             thisClientHandlerCtx.channel().pipeline().addLast(HttpResponseEncoder())
             thisClientHandlerCtx.channel().pipeline().addLast(RelayHandler(outboundChannel))
 
@@ -74,25 +75,25 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
         }
     }
 
-    inner class HttpHandler: ChannelInboundHandlerAdapter() {
-
-        val message = java.lang.String("Fucking Silly Baidu").getBytes()
-
-        override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-            if (msg is HttpResponse) {
-                ctx.fireChannelRead(DefaultHttpResponse(msg.protocolVersion(),
-                        msg.status(), msg.headers().set("Content-Type", "text/plain").set("Content-Length", message.size + 1)))
-                return
-            } else if (msg is HttpContent) {
-                val hookedMessage = msg.copy() as DefaultLastHttpContent
-                hookedMessage.content().clear()
-                hookedMessage.content().writeBytes(message)
-                hookedMessage.content().writeByte(0x0a)
-                ctx.fireChannelRead(hookedMessage)
-                return
-            }
-
-            ctx.fireChannelRead(msg)
-        }
-    }
+//    inner class HttpHandler: ChannelInboundHandlerAdapter() {
+//
+//        val message = java.lang.String("Fucking Silly Baidu").getBytes()
+//
+//        override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+//            if (msg is HttpResponse) {
+//                ctx.fireChannelRead(DefaultHttpResponse(msg.protocolVersion(),
+//                        msg.status(), msg.headers().set("Content-Type", "text/plain").set("Content-Length", message.size + 1)))
+//                return
+//            } else if (msg is HttpContent) {
+//                val hookedMessage = msg.copy() as DefaultLastHttpContent
+//                hookedMessage.content().clear()
+//                hookedMessage.content().writeBytes(message)
+//                hookedMessage.content().writeByte(0x0a)
+//                ctx.fireChannelRead(hookedMessage)
+//                return
+//            }
+//
+//            ctx.fireChannelRead(msg)
+//        }
+//    }
 }
