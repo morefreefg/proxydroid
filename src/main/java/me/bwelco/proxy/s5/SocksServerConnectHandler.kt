@@ -12,6 +12,7 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.proxy.DirectClientProxy
 import me.bwelco.proxy.proxy.HttpUpstreamProxy
+import me.bwelco.proxy.proxy.HttpsUpstreamProxy
 import java.net.Socket
 
 @ChannelHandler.Sharable
@@ -39,7 +40,7 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
 
                 clientCtx.pipeline().remove(this)
 //                clientCtx.pipeline().addLast(DirectClientProxy(message, commandResponsePromise))
-                clientCtx.pipeline().addLast(HttpUpstreamProxy(message, commandResponsePromise))
+                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise))
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()

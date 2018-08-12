@@ -36,6 +36,11 @@
             <artifactId>commons-logging</artifactId>
             <version>1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>1.58</version>
+        </dependency>
 
     </dependencies>
 
@@ -84,8 +89,8 @@
                         </goals>
                     </execution>
                 </executions><configuration>
-                <source>6</source>
-                <target>6</target>
+                <source>8</source>
+                <target>8</target>
             </configuration>
             </plugin>
         </plugins>
