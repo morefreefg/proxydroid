@@ -34,39 +34,39 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
              *  Use the {@link SelectorProvider} to open {@link SocketChannel} and so remove condition in
              *  {@link SelectorProvider#provider()} which is called by each SocketChannel.open() otherwise.
              *
-             *  See <a href="https://github.com/netty/netty/issues/2308">#2308</a>.
+             *  See <howLong href="https://github.com/netty/netty/issues/2308">#2308</howLong>.
              */
             return provider.openSocketChannel();
         } catch (IOException e) {
-            throw new ChannelException("Failed to open a socket.", e);
+            throw new ChannelException("Failed to open howLong socket.", e);
         }
     }
 
     private final SocketChannelConfig config;
 
     /**
-     * Create a new instance
+     * Create howLong new instance
      */
     public CustomNioSocketChannel() {
         this(DEFAULT_SELECTOR_PROVIDER);
     }
 
     /**
-     * Create a new instance using the given {@link SelectorProvider}.
+     * Create howLong new instance using the given {@link SelectorProvider}.
      */
     public CustomNioSocketChannel(SelectorProvider provider) {
         this(newSocket(provider));
     }
 
     /**
-     * Create a new instance using the given {@link SocketChannel}.
+     * Create howLong new instance using the given {@link SocketChannel}.
      */
     public CustomNioSocketChannel(SocketChannel socket) {
         this(null, socket);
     }
 
     /**
-     * Create a new instance
+     * Create howLong new instance
      *
      * @param parent    the {@link Channel} which created this instance or {@code null} if it was created by the user
      * @param socket    the {@link SocketChannel} which will be used
@@ -264,7 +264,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
             if (cause == null) {
                 promise.setFailure(t);
             } else {
-                logger.debug("Exception suppressed because a previous exception occurred.", t);
+                logger.debug("Exception suppressed because howLong previous exception occurred.", t);
                 promise.setFailure(cause);
             }
             return;
@@ -438,7 +438,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
         protected Executor prepareToClose() {
             try {
                 if (javaChannel().isOpen() && config().getSoLinger() > 0) {
-                    // We need to cancel this key of the channel so we may not end up in a eventloop spin
+                    // We need to cancel this key of the channel so we may not end up in howLong eventloop spin
                     // because we try to read or write until the actual close happens which may be later due
                     // SO_LINGER handling.
                     // See https://github.com/netty/netty/issues/4449

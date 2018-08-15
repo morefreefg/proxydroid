@@ -8,10 +8,11 @@ import io.netty.handler.codec.socksx.SocksVersion
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
 import io.netty.handler.codec.socksx.v4.Socks4CommandType
 import io.netty.handler.codec.socksx.v5.*
+import me.bwelco.proxy.http.HttpInterceptor
 import java.net.Socket
 
 @ChannelHandler.Sharable
-class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelInboundHandler<SocksMessage>() {
+class SocksServerHandler(val socksServerConnectHandler: SocksServerConnectHandler): SimpleChannelInboundHandler<SocksMessage>() {
 
     override fun channelRead0(ctx: ChannelHandlerContext,  socksRequest: SocksMessage) {
 
@@ -19,7 +20,7 @@ class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelIn
             SocksVersion.SOCKS4a -> {
                 val socksV4CmdRequest = socksRequest as Socks4CommandRequest
                 if (socksV4CmdRequest.type() === Socks4CommandType.CONNECT) {
-                    ctx.pipeline().addLast(SocksServerConnectHandler(connectListener))
+                    ctx.pipeline().addLast(socksServerConnectHandler)
                     ctx.pipeline().remove(this)
                     ctx.fireChannelRead(socksRequest)
                 } else {
@@ -38,7 +39,7 @@ class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelIn
                     ctx.write(DefaultSocks5PasswordAuthResponse(Socks5PasswordAuthStatus.SUCCESS))
                 } else if (socksRequest is Socks5CommandRequest) {
                     if (socksRequest.type() === Socks5CommandType.CONNECT) {
-                        ctx.pipeline().addLast(SocksServerConnectHandler(connectListener))
+                        ctx.pipeline().addLast(socksServerConnectHandler)
                         ctx.pipeline().remove(this)
                         ctx.fireChannelRead(socksRequest)
                     } else {
@@ -63,8 +64,8 @@ class SocksServerHandler(val connectListener: (Socket) -> Unit): SimpleChannelIn
     }
 
     companion object {
-        fun newInstance(connectListener: (Socket) -> Unit): SocksServerHandler {
-            return SocksServerHandler(connectListener)
+        fun newInstance(socksServerConnectHandler: SocksServerConnectHandler): SocksServerHandler {
+            return SocksServerHandler(socksServerConnectHandler)
         }
     }
 }

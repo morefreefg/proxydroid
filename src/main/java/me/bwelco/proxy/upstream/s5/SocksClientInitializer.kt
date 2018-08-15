@@ -10,7 +10,7 @@ import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
 
 /**
- * downStreamChannel is the channel where to communicate. such as a Socks5ClientChannel
+ * downStreamChannel is the channel where to communicate. such as howLong Socks5ClientChannel
  */
 class SocksClientInitializer(val downStreamChannel: Channel,
                              val request: Socks5CommandRequest,

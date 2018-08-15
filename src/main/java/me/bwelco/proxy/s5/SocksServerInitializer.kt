@@ -7,11 +7,11 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import java.net.Socket
 
-class SocksServerInitializer(val connectListener: (Socket) -> Unit): ChannelInitializer<SocketChannel>() {
+class SocksServerInitializer(val socksServerConnectHandler: SocksServerConnectHandler): ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
         ch.pipeline().addLast(
                 LoggingHandler(LogLevel.INFO),
                 SocksPortUnificationServerHandler(),
-                SocksServerHandler.newInstance(connectListener))
+                SocksServerHandler.newInstance(socksServerConnectHandler))
     }
 }

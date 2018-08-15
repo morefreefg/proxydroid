@@ -9,16 +9,14 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.http.HttpInterceptor
-import me.bwelco.proxy.http.HttpRequest
-import me.bwelco.proxy.http.HttpResponse
+import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.tls.SSLFactory
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
-import org.omg.PortableInterceptor.Interceptor
 
 class HttpsUpstreamProxy(val request: Socks5CommandRequest,
                          val promise: Promise<Channel>,
-                         val interceptors: List<HttpInterceptor> = listOf()) : ChannelInboundHandlerAdapter() {
+                         val interceptorMatcher: HttpInterceptorMatcher) : ChannelInboundHandlerAdapter() {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
@@ -61,7 +59,6 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
             outerPipeline.addLast(LoggingHandler())
             outerPipeline.addLast(HttpResponseDecoder())
             outerPipeline.addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            outerPipeline.addLast(HttpResponseInterceptorHandler())
             outerPipeline.addLast(RelayHandler(thisClientHandlerCtx.channel()))
 
             // upstream out
@@ -76,7 +73,7 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
             // downstream in
             thisClientHandlerCtx.pipeline().addLast(HttpRequestDecoder())
             thisClientHandlerCtx.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            thisClientHandlerCtx.pipeline().addLast(HttpRequestInterceptorHandler())
+            thisClientHandlerCtx.pipeline().addLast("HostSelector", HostSelector(interceptorMatcher, request.dstAddr()))
             thisClientHandlerCtx.pipeline().addLast(RelayHandler(outboundChannel))
 
 
@@ -88,23 +85,35 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
         }
     }
 
-//    class ProxyInterceptor(downStream: Channel, upstreamChannel: Channel): HttpInterceptor {
-//        override fun intercept(chain: HttpInterceptor.Chain): HttpResponse {
-//
-//        }
-//    }
+    class HttpInterceptorHandler(val httpInterceptor: HttpInterceptor) : ChannelDuplexHandler() {
 
-    class HttpRequestInterceptorHandler : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             if (msg is FullHttpRequest) {
-
+                httpInterceptor.onRequest(msg)
             }
             ctx.fireChannelRead(msg)
         }
+
+        override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
+            if (msg is FullHttpResponse) {
+                httpInterceptor.onResponse(msg)
+            }
+            ctx.write(msg, promise)
+        }
+
     }
 
-    class HttpResponseInterceptorHandler: ChannelInboundHandlerAdapter() {
+    class HostSelector(val interceptorMatcher: HttpInterceptorMatcher, val remoteHost: String) : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+            if (msg is FullHttpRequest) {
+                interceptorMatcher.match(remoteHost)?.apply {
+                    ctx.pipeline().addAfter(
+                            "HostSelector",
+                            "HttpInterceptorHandler",
+                            HttpInterceptorHandler(this))
+                }
+            }
+
             ctx.fireChannelRead(msg)
         }
     }

@@ -10,17 +10,17 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.proxy.DirectClientProxy
-import me.bwelco.proxy.proxy.HttpUpstreamProxy
+import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.HttpsUpstreamProxy
 import java.net.Socket
 
 @ChannelHandler.Sharable
-class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleChannelInboundHandler<SocksMessage>() {
+class SocksServerConnectHandler(val connectListener: (Socket) -> Unit = {},
+                                val interceptorMatcher: HttpInterceptorMatcher) : SimpleChannelInboundHandler<SocksMessage>() {
 
     override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {
 
-        when(message) {
+        when (message) {
             is Socks5CommandRequest -> {
 
                 val commandResponsePromise: Promise<Channel> = clientCtx.executor().newPromise()
@@ -39,8 +39,7 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit): SimpleCh
                 }
 
                 clientCtx.pipeline().remove(this)
-//                clientCtx.pipeline().addLast(DirectClientProxy(message, commandResponsePromise))
-                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise))
+                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise, interceptorMatcher))
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()
