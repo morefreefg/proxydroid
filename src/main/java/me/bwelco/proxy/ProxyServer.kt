@@ -1,6 +1,7 @@
 package me.bwelco.proxy
 
 import io.netty.bootstrap.ServerBootstrap
+import io.netty.buffer.Unpooled
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.FullHttpRequest
@@ -12,20 +13,32 @@ import me.bwelco.proxy.s5.SocksServerInitializer
 import me.bwelco.proxy.tls.SSLFactory
 import org.apache.commons.logging.LogFactory
 import java.net.Socket
+import java.nio.charset.Charset
 
 fun main(args: Array<String>) {
     ProxyServer().start(1080)
 }
 
-class LoggingHttpInterceptor: HttpInterceptor {
+class LoggingHttpInterceptor : HttpInterceptor {
 
-    override fun onRequest(request: FullHttpRequest) {
-        request.headers().remove("host").add("host", "map.baidu.com")
-        println(request.headers())
+    override fun onRequest(request: FullHttpRequest): FullHttpRequest {
+        return request
     }
 
-    override fun onResponse(response: FullHttpResponse) {
-        println(response.headers())
+    override fun onResponse(response: FullHttpResponse): FullHttpResponse {
+        return response.replace(Unpooled.wrappedBuffer(java.lang.String(
+                "<!DOCTYPE html>\n" +
+                        "<html>\n" +
+                        "<head>\n" +
+                        "\t<title>fucking baidu</title>\n" +
+                        "</head>\n" +
+                        "<body>\n" +
+                        "\t<h1>hooked html</h1>\n" +
+                        "\n" +
+                        "</body>\n" +
+                        "</html>").getBytes())).apply {
+            this.headers().remove("Content-Encoding")
+        }
     }
 }
 

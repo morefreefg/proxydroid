@@ -4,6 +4,6 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 
 interface HttpInterceptor {
-    fun onRequest(request: FullHttpRequest)
-    fun onResponse(response: FullHttpResponse)
+    fun onRequest(request: FullHttpRequest): FullHttpRequest
+    fun onResponse(response: FullHttpResponse): FullHttpResponse
 }

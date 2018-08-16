@@ -1,9 +1,11 @@
 package me.bwelco.proxy.proxy
 
 import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.Unpooled
 import io.netty.channel.*
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
+import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.concurrent.Promise
@@ -66,6 +68,7 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
 
             // downstream ssl
             thisClientHandlerCtx.pipeline().addFirst(downStreamSSLContext.newHandler(ctx.alloc()))
+            thisClientHandlerCtx.pipeline().addLast(LoggingHandler(LogLevel.INFO))
 
             // downstream out
             thisClientHandlerCtx.pipeline().addLast(HttpResponseEncoder())
@@ -89,18 +92,43 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
 
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             if (msg is FullHttpRequest) {
-                httpInterceptor.onRequest(msg)
+                val newRequest = httpInterceptor.onRequest(msg)
+                ctx.fireChannelRead(newRequest)
+            } else {
+                ctx.fireChannelRead(msg)
             }
-            ctx.fireChannelRead(msg)
         }
 
         override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
             if (msg is FullHttpResponse) {
-                httpInterceptor.onResponse(msg)
+                val newResponse = httpInterceptor.onResponse(msg)
+                ctx.write(newResponse)
+            } else {
+                ctx.write(msg, promise)
             }
-            ctx.write(msg, promise)
+        }
+    }
+
+    class CorrectCRLFHander : ChannelDuplexHandler() {
+
+        override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+            super.channelRead(ctx, msg)
         }
 
+        override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
+            if (msg is FullHttpResponse) {
+                val newMessage = msg.replace(Unpooled.buffer(msg.content().capacity() + 2)
+                        .writeBytes(msg.content())
+                        .writeByte(0x0d)
+                        .writeByte(0x0a)
+                )
+                newMessage.headers().remove("Content-Length").add("Content-Length", newMessage.content().capacity())
+                msg.release()
+                ctx.write(newMessage, promise)
+            } else {
+                ctx.write(msg, promise)
+            }
+        }
     }
 
     class HostSelector(val interceptorMatcher: HttpInterceptorMatcher, val remoteHost: String) : ChannelInboundHandlerAdapter() {
@@ -111,6 +139,9 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
                             "HostSelector",
                             "HttpInterceptorHandler",
                             HttpInterceptorHandler(this))
+
+                    ctx.pipeline().addBefore("HttpInterceptorHandler", "CorrectCRLFHander",
+                            CorrectCRLFHander())
                 }
             }
 
