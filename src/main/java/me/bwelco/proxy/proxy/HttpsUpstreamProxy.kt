@@ -112,7 +112,20 @@ class HttpsUpstreamProxy(val request: Socks5CommandRequest,
     class CorrectCRLFHander : ChannelDuplexHandler() {
 
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-            super.channelRead(ctx, msg)
+            if (msg is FullHttpRequest) {
+                val newMessage = msg.replace(Unpooled.buffer(msg.content().capacity() + 2)
+                        .writeBytes(msg.content())
+                        .writeByte(0x0d)
+                        .writeByte(0x0a)
+                )
+                newMessage.headers().remove("Content-Length")
+                        .add("Content-Length", newMessage.content().capacity())
+
+                msg.release()
+                ctx.fireChannelRead(newMessage)
+            } else {
+                ctx.fireChannelRead(msg)
+            }
         }
 
         override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
