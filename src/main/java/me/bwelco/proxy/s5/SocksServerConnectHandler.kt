@@ -9,9 +9,11 @@ import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
+import io.netty.handler.proxy.ProxyHandler
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.HttpsUpstreamProxy
+import me.bwelco.proxy.proxy.ProxySelectorHandler
 import java.net.Socket
 
 @ChannelHandler.Sharable
@@ -39,7 +41,9 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit = {},
                 }
 
                 clientCtx.pipeline().remove(this)
-                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise, interceptorMatcher))
+//                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise, interceptorMatcher))
+//                clientCtx.pipeline().addLast(ProxySelectorHandler())
+                clientCtx.pipeline()
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()

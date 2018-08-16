@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
@@ -15,6 +16,7 @@ import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.tls.SSLFactory
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
+import javax.net.ssl.SSLEngine
 
 class HttpsUpstreamProxy(val request: Socks5CommandRequest,
                          val promise: Promise<Channel>,
