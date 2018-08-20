@@ -5,7 +5,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.ReferenceCountUtil
-import me.bwelco.proxy.s5.SocksServerUtils
+import me.bwelco.proxy.downstream.SocksServerUtils
 
 class RelayHandler(val relayChannel: Channel): ChannelInboundHandlerAdapter() {
 

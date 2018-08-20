@@ -1,4 +1,4 @@
-package me.bwelco.proxy.proxy
+package me.bwelco.proxy.upstream
 
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext

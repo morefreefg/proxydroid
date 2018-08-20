@@ -1,4 +1,4 @@
-package me.bwelco.proxy.proxy
+package me.bwelco.proxy.upstream
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
@@ -7,11 +7,10 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
-import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
 
-class HttpUpstreamProxy(val request: Socks5CommandRequest,
-                        val promise: Promise<Channel>): ChannelInboundHandlerAdapter() {
+class HttpUpstream(val request: Socks5CommandRequest,
+                   val promise: Promise<Channel>): Upstream(request, promise)  {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext

@@ -1,4 +1,4 @@
-package me.bwelco.proxy.s5
+package me.bwelco.proxy.proxy
 
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandler
@@ -9,16 +9,28 @@ import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
-import io.netty.handler.proxy.ProxyHandler
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.http.HttpInterceptorMatcher
-import me.bwelco.proxy.proxy.HttpsUpstreamProxy
-import me.bwelco.proxy.proxy.ProxySelectorHandler
+import me.bwelco.proxy.config.Config
+import me.bwelco.proxy.downstream.SocksServerUtils
+import me.bwelco.proxy.upstream.DirectUpstream
+import me.bwelco.proxy.upstream.RelayHandler
+import me.bwelco.proxy.upstream.Upstream
 import java.net.Socket
 
 @ChannelHandler.Sharable
-class SocksServerConnectHandler(val connectListener: (Socket) -> Unit = {},
-                                val interceptorMatcher: HttpInterceptorMatcher) : SimpleChannelInboundHandler<SocksMessage>() {
+class UpstreamMatchHandler(val connectListener: (Socket) -> Unit = {},
+                           val config: Config) : SimpleChannelInboundHandler<SocksMessage>() {
+
+    fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
+        return config.proxyList()[config.proxyMatcher(message.dstAddr())]
+                ?.createProxyHandler(message, promise)
+                ?: DirectUpstream(message, promise)
+    }
+
+    fun doFollowUp(clientCtx: Channel, remoteCtx: Channel) {
+        clientCtx.pipeline().addLast(RelayHandler(remoteCtx))
+        remoteCtx.pipeline().addLast(RelayHandler(clientCtx))
+    }
 
     override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {
 
@@ -41,9 +53,11 @@ class SocksServerConnectHandler(val connectListener: (Socket) -> Unit = {},
                 }
 
                 clientCtx.pipeline().remove(this)
-//                clientCtx.pipeline().addLast(HttpsUpstreamProxy(message, commandResponsePromise, interceptorMatcher))
-//                clientCtx.pipeline().addLast(ProxySelectorHandler())
-                clientCtx.pipeline()
+                clientCtx.pipeline().addLast(matchUpstream(message, commandResponsePromise.addListener {
+                    if (it.isSuccess) {
+                        doFollowUp(clientCtx.channel(), it.now as Channel)
+                    }
+                }))
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()

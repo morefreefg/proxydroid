@@ -6,14 +6,15 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
+import me.bwelco.proxy.config.Config
 import me.bwelco.proxy.http.HttpInterceptor
-import me.bwelco.proxy.http.HttpInterceptorMatcher
-import me.bwelco.proxy.s5.SocksServerConnectHandler
-import me.bwelco.proxy.s5.SocksServerInitializer
+import me.bwelco.proxy.proxy.UpstreamMatchHandler
+import me.bwelco.proxy.downstream.SocksServerInitializer
+import me.bwelco.proxy.proxy.Proxy
+import me.bwelco.proxy.proxy.Socks5Proxy
 import me.bwelco.proxy.tls.SSLFactory
 import org.apache.commons.logging.LogFactory
 import java.net.Socket
-import java.nio.charset.Charset
 
 fun main(args: Array<String>) {
     ProxyServer().start(1080)
@@ -46,9 +47,21 @@ class ProxyServer {
 
     val logger = LogFactory.getLog(ProxyServer::class.java)
 
-    val socksServerConnectHandler = SocksServerConnectHandler({}, object : HttpInterceptorMatcher {
-        override fun match(host: String): HttpInterceptor? {
-            return LoggingHttpInterceptor()
+    val socksServerConnectHandler = UpstreamMatchHandler({}, object : Config {
+
+        val proxy = mutableMapOf<String, Proxy>("socks" to Socks5Proxy())
+
+        override fun proxyMatcher(host: String): String {
+            return when {
+                host.contains("fengguang") -> "DIRECT"
+                host.contains("baidu") -> "socks"
+                host.contains("google") -> "socks"
+                else -> "DIRECT"
+            }
+        }
+
+        override fun proxyList(): MutableMap<String, Proxy> {
+            return proxy
         }
     })
 

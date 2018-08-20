@@ -1,4 +1,4 @@
-package me.bwelco.proxy.s5
+package me.bwelco.proxy.downstream
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel

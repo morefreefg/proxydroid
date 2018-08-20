@@ -1,4 +1,4 @@
-package me.bwelco.proxy.proxy
+package me.bwelco.proxy.upstream
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
@@ -8,11 +8,10 @@ import io.netty.channel.ChannelOption
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.CustomNioSocketChannel
-import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.addFutureListener
 
-class DirectClientProxy(val request: Socks5CommandRequest,
-                        val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
+class DirectUpstream(val request: Socks5CommandRequest,
+                     val promise: Promise<Channel>) : Upstream(request, promise) {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
@@ -35,12 +34,9 @@ class DirectClientProxy(val request: Socks5CommandRequest,
     inner class ConnectHandler : ChannelInboundHandlerAdapter() {
         override fun channelActive(ctx: ChannelHandlerContext) {
             val outboundChannel = ctx.channel()
-            promise.setSuccess(ctx.channel())
+            promise.setSuccess(outboundChannel)
 
             outboundChannel.pipeline().remove(this)
-            // start to relay data transparently
-            outboundChannel.pipeline().addLast(RelayHandler(thisClientHandlerCtx.channel()))
-            thisClientHandlerCtx.channel().pipeline().addLast(RelayHandler(outboundChannel))
         }
 
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
