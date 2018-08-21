@@ -7,9 +7,11 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 import me.bwelco.proxy.config.Config
+import me.bwelco.proxy.config.HttpInterceptorConfig
 import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.downstream.SocksServerInitializer
+import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.Proxy
 import me.bwelco.proxy.proxy.Socks5Proxy
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
@@ -24,7 +26,7 @@ fun main(args: Array<String>) {
     ProxyServer().start(1080)
 }
 
-class LoggingHttpInterceptor : HttpInterceptor {
+class BaiduHttpInterceptor : HttpInterceptor {
 
     override fun onRequest(request: FullHttpRequest): FullHttpRequest {
         return request
@@ -52,13 +54,31 @@ class ProxyServer {
     val logger = LogFactory.getLog(ProxyServer::class.java)
 
     val config = object : Config {
+        override fun mitmConfig(): HttpInterceptorConfig {
+            return object :HttpInterceptorConfig {
+                override fun httpInterceptorMatcher(host: String): HttpInterceptorMatcher {
+                    return object : HttpInterceptorMatcher {
+                        override fun match(host: String): HttpInterceptor? {
+                            return when {
+                                host.contains("baidu") -> BaiduHttpInterceptor()
+                                else -> null
+                            }
+                        }
+
+                    }
+                }
+
+                override fun enableMitm(): Boolean = true
+
+            }
+        }
 
         val proxy = mutableMapOf<String, Proxy>("socks" to Socks5Proxy())
 
         override fun proxyMatcher(host: String): String {
             return when {
                 host.contains("fengguang") -> "DIRECT"
-                host.contains("baidu") -> "REJECT"
+                host.contains("baidu") -> "DIRECT"
                 host.contains("google") -> "socks"
                 else -> "DIRECT"
             }

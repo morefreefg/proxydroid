@@ -12,6 +12,7 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.downstream.SocksServerUtils
+import me.bwelco.proxy.http.MitmHandler
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.upstream.Upstream
@@ -30,7 +31,9 @@ class UpstreamMatchHandler : SimpleChannelInboundHandler<SocksMessage>(), KoinCo
     }
 
     fun doFollowUp(clientCtx: Channel, remoteCtx: Channel) {
-        clientCtx.pipeline().addLast(RelayHandler(remoteCtx))
+//        clientCtx.pipeline().addLast(RelayHandler(remoteCtx))
+//        remoteCtx.pipeline().addLast(RelayHandler(clientCtx))
+        clientCtx.pipeline().addLast(MitmHandler())
         remoteCtx.pipeline().addLast(RelayHandler(clientCtx))
     }
 

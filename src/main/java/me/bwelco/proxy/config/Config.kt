@@ -9,4 +9,6 @@ interface Config {
 
     fun proxyMatcher(host: String): String
 
+    fun mitmConfig(): HttpInterceptorConfig
+
 }
