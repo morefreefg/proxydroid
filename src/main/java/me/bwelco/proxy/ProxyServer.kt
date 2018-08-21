@@ -7,13 +7,17 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 import me.bwelco.proxy.config.Config
+import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.http.HttpInterceptor
-import me.bwelco.proxy.proxy.UpstreamMatchHandler
 import me.bwelco.proxy.downstream.SocksServerInitializer
 import me.bwelco.proxy.proxy.Proxy
 import me.bwelco.proxy.proxy.Socks5Proxy
+import me.bwelco.proxy.proxy.UpstreamMatchHandler
 import me.bwelco.proxy.tls.SSLFactory
 import org.apache.commons.logging.LogFactory
+import org.koin.dsl.module.Module
+import org.koin.dsl.module.applicationContext
+import org.koin.standalone.StandAloneContext.startKoin
 import java.net.Socket
 
 fun main(args: Array<String>) {
@@ -47,14 +51,14 @@ class ProxyServer {
 
     val logger = LogFactory.getLog(ProxyServer::class.java)
 
-    val socksServerConnectHandler = UpstreamMatchHandler({}, object : Config {
+    val config = object : Config {
 
         val proxy = mutableMapOf<String, Proxy>("socks" to Socks5Proxy())
 
         override fun proxyMatcher(host: String): String {
             return when {
                 host.contains("fengguang") -> "DIRECT"
-                host.contains("baidu") -> "socks"
+                host.contains("baidu") -> "REJECT"
                 host.contains("google") -> "socks"
                 else -> "DIRECT"
             }
@@ -63,10 +67,17 @@ class ProxyServer {
         override fun proxyList(): MutableMap<String, Proxy> {
             return proxy
         }
-    })
+    }
 
     fun start(port: Int, onConnectListener: (Socket) -> Unit = {}) {
         SSLFactory.preloadCertificate(listOf("baidu.com"))
+
+        // Koin module
+        val myModule : Module = applicationContext {
+            bean { ProxyConfig(config) } // get() will resolve Repository instance
+        }
+
+        startKoin(listOf(myModule))
 
         val bossGroup = NioEventLoopGroup(1)
         val workerGroup = NioEventLoopGroup()
@@ -74,7 +85,7 @@ class ProxyServer {
             val b = ServerBootstrap()
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel::class.java)
-                    .childHandler(SocksServerInitializer(socksServerConnectHandler))
+                    .childHandler(SocksServerInitializer(UpstreamMatchHandler()))
             logger.debug("start server at: $port")
             b.bind(port).sync().channel().closeFuture().sync()
         } finally {

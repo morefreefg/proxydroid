@@ -10,19 +10,21 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.config.Config
+import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.downstream.SocksServerUtils
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.upstream.Upstream
-import java.net.Socket
+import org.koin.standalone.KoinComponent
+import org.koin.standalone.inject
 
 @ChannelHandler.Sharable
-class UpstreamMatchHandler(val connectListener: (Socket) -> Unit = {},
-                           val config: Config) : SimpleChannelInboundHandler<SocksMessage>() {
+class UpstreamMatchHandler : SimpleChannelInboundHandler<SocksMessage>(), KoinComponent {
+
+    val proxyConfig: ProxyConfig by inject()
 
     fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
-        return config.proxyList()[config.proxyMatcher(message.dstAddr())]
+        return proxyConfig.proxyList()[proxyConfig.proxyMatcher(message.dstAddr())]
                 ?.createProxyHandler(message, promise)
                 ?: DirectUpstream(message, promise)
     }

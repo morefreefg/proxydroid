@@ -11,8 +11,6 @@ import me.bwelco.proxy.proxy.UpstreamMatchHandler
 
 class SocksServerInitializer(val upstreamMatchHandler: UpstreamMatchHandler) : ChannelInitializer<SocketChannel>() {
     override fun initChannel(ch: SocketChannel) {
-        upstreamMatchHandler.config.proxyList().put("DIRECT", DirectProxy())
-        upstreamMatchHandler.config.proxyList().put("REJECT", RejectProxy())
         ch.pipeline().addLast(
                 LoggingHandler(LogLevel.INFO),
                 SocksPortUnificationServerHandler(),

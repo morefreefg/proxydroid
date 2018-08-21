@@ -8,6 +8,13 @@
     <artifactId>socks</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <kotlin.version>1.2.60</kotlin.version>
     </properties>
@@ -40,6 +47,11 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
             <version>1.58</version>
+        </dependency>
+        <dependency>
+            <groupId>org.koin</groupId>
+            <artifactId>koin-core</artifactId>
+            <version>0.9.3</version>
         </dependency>
 
     </dependencies>

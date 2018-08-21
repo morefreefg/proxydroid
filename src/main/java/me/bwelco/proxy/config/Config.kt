@@ -5,7 +5,7 @@ import me.bwelco.proxy.proxy.Proxy
 
 interface Config {
 
-    fun proxyList(): MutableMap<String, Proxy>
+    fun proxyList(): Map<String, Proxy>
 
     fun proxyMatcher(host: String): String
 
