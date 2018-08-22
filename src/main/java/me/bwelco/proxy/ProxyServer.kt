@@ -55,18 +55,16 @@ class ProxyServer {
 
     val config = object : Config {
         override fun mitmConfig(): HttpInterceptorConfig {
-            return object :HttpInterceptorConfig {
-                override fun httpInterceptorMatcher(host: String): HttpInterceptorMatcher {
-                    return object : HttpInterceptorMatcher {
+            return object : HttpInterceptorConfig {
+                override val httpInterceptorMatcher: HttpInterceptorMatcher
+                    get() = object : HttpInterceptorMatcher {
                         override fun match(host: String): HttpInterceptor? {
                             return when {
                                 host.contains("baidu") -> BaiduHttpInterceptor()
                                 else -> null
                             }
                         }
-
                     }
-                }
 
                 override fun enableMitm(): Boolean = true
 
@@ -93,7 +91,7 @@ class ProxyServer {
         SSLFactory.preloadCertificate(listOf("baidu.com"))
 
         // Koin module
-        val myModule : Module = applicationContext {
+        val myModule: Module = applicationContext {
             bean { ProxyConfig(config) } // get() will resolve Repository instance
         }
 

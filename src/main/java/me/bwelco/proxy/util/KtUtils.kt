@@ -13,5 +13,8 @@ fun ChannelFuture.addFutureListener(result: (ChannelFuture) -> Unit) {
     })
 }
 
+fun String?.isEmpty(): Boolean {
+    return (this == null || this.length == 0)
+}
 
-fun ByteBuf.string(): String = this.toString(Charset.forName("UTF-8" ))
+fun ByteBuf.string(): String = this.toString(Charset.forName("UTF-8"))

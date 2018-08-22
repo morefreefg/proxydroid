@@ -13,6 +13,6 @@ interface HttpInterceptorConfig {
     /**
      * select interceptor for different host
      */
-    fun httpInterceptorMatcher(host: String): HttpInterceptorMatcher
+    val httpInterceptorMatcher: HttpInterceptorMatcher
 
 }

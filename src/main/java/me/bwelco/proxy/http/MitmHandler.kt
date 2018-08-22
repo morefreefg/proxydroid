@@ -16,14 +16,17 @@ import javax.net.ssl.SSLContext
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
 class MitmHandler : ReplayingDecoder<MitmHandler.State>(State.INIT) {
 
-    val SSL_RT_HANDSHAKE = 0x16
+    companion object {
+        val fakeSslContext = SslContextBuilder.forClient().build()
+        val SSL_RT_HANDSHAKE = 0x16
 
-    val SSL3_VERSION = 0x0300
-    val TLS1_1_VERSION = 0x0301
-    val TLS1_2_VERSION = 0x0302
-    val TLS1_3_VERSION = 0x0303
+        val SSL3_VERSION = 0x0300
+        val TLS1_1_VERSION = 0x0301
+        val TLS1_2_VERSION = 0x0302
+        val TLS1_3_VERSION = 0x0303
 
-    val SUPPORTED_TLS_VERSIONS = listOf(SSL3_VERSION, TLS1_1_VERSION, TLS1_2_VERSION, TLS1_3_VERSION)
+        val SUPPORTED_TLS_VERSIONS = listOf(SSL3_VERSION, TLS1_1_VERSION, TLS1_2_VERSION, TLS1_3_VERSION)
+    }
 
     enum class State {
         INIT,
@@ -46,19 +49,17 @@ class MitmHandler : ReplayingDecoder<MitmHandler.State>(State.INIT) {
                 // is TLS
                 if (type.toInt() == SSL_RT_HANDSHAKE && SUPPORTED_TLS_VERSIONS.contains(version)) {
 
-                    ctx.pipeline().addLast(SniHandler(DomainNameMappingBuilder<SslContext>(
-                            SslContextBuilder.forClient().build()
-                    ).build()))
+                    ctx.pipeline().addLast(CustomSniHandler(DomainNameMappingBuilder<SslContext>(fakeSslContext).build()))
 
-                    ctx.pipeline().addLast(object : ChannelInboundHandlerAdapter() {
-                        override fun userEventTriggered(ctx: ChannelHandlerContext, event: Any) {
-                            if (event is SniCompletionEvent) {
-                                val hostName = event.hostname()
-                            } else {
-                                super.userEventTriggered(ctx, event)
-                            }
-                        }
-                    })
+//                    ctx.pipeline().addLast(object : ChannelInboundHandlerAdapter() {
+//                        override fun userEventTriggered(ctx: ChannelHandlerContext, event: Any) {
+//                            if (event is SniCompletionEvent) {
+//                                val hostName = event.hostname()
+//                            } else {
+//                                super.userEventTriggered(ctx, event)
+//                            }
+//                        }
+//                    })
 
                 } else {
 
