@@ -13,40 +13,22 @@ import me.bwelco.proxy.util.isEmpty
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
-class CustomSniHandler(val mapping: DomainNameMapping<SslContext>) : SniHandler(mapping), KoinComponent {
+class CustomSniHandler(mapping: DomainNameMapping<SslContext>) : SniHandler(mapping), KoinComponent {
 
     val proxyConfig: ProxyConfig by inject()
 
     override fun replaceHandler(ctx: ChannelHandlerContext, hostname: String?, fakedSslContext: SslContext) {
-//        super.replaceHandler(ctx, hostname, sslContext)
-
-//        var sslHandler: SslHandler? = null
-//        try {
-//            sslHandler = sslContext.newHandler(ctx.alloc())
-//            ctx.pipeline().replace(this, SslHandler::class.java.name, sslHandler)
-//            sslHandler = null
-//        } finally {
-//            // Since the SslHandler was not inserted into the pipeline the ownership of the SSLEngine was not
-//            // transferred to the SslHandler.
-//            // See https://github.com/netty/netty/issues/5678
-//            if (sslHandler != null) {
-//                ReferenceCountUtil.safeRelease(sslHandler.engine())
-//            }
-//        }
-//
 
         if (hostname.isEmpty()) return
 
         if (proxyConfig.mitmConfig().httpInterceptorMatcher.match(hostname!!) == null) {
-            super.replaceHandler(ctx, hostname, fakedSslContext)
+            return super.replaceHandler(ctx, hostname, fakedSslContext)
         }
 
         val downStreamSSLContext = SslContextBuilder
                 .forServer(SSLFactory.certConfig.serverPrivateKey,
-                        SSLFactory.newCert(request.dstAddr()))
+                        SSLFactory.newCert(hostname))
                 .build()
-
-
-
+        return super.replaceHandler(ctx, hostname, downStreamSSLContext)
     }
 }
