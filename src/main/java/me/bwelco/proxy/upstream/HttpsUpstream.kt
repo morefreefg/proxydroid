@@ -75,7 +75,7 @@ class HttpsUpstream(val request: Socks5CommandRequest,
             // downstream in
             thisClientHandlerCtx.pipeline().addLast(HttpRequestDecoder())
             thisClientHandlerCtx.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            thisClientHandlerCtx.pipeline().addLast("HostSelector", HostSelector(interceptorMatcher, request.dstAddr()))
+            thisClientHandlerCtx.pipeline().addLast("HttpInterceptorHandler", HostSelector(interceptorMatcher, request.dstAddr()))
             thisClientHandlerCtx.pipeline().addLast(RelayHandler(outboundChannel))
 
 
@@ -148,7 +148,7 @@ class HttpsUpstream(val request: Socks5CommandRequest,
             if (msg is FullHttpRequest) {
                 interceptorMatcher.match(remoteHost)?.apply {
                     ctx.pipeline().addAfter(
-                            "HostSelector",
+                            "HttpInterceptorHandler",
                             "HttpInterceptorHandler",
                             HttpInterceptorHandler(this))
 

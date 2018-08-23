@@ -5,17 +5,15 @@ import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.codec.http.FullHttpRequest
 import me.bwelco.proxy.upstream.HttpsUpstream
 
-class HostSelector(val interceptorMatcher: HttpInterceptorMatcher, val remoteHost: String) : ChannelInboundHandlerAdapter() {
+class HttpInterceptorHandler(val httpInterceptor: HttpInterceptor) : ChannelInboundHandlerAdapter() {
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
         if (msg is FullHttpRequest) {
-            interceptorMatcher.match(remoteHost)?.apply {
                 ctx.pipeline().addAfter(
-                        "HostSelector",
                         "HttpInterceptorHandler",
-                        MitmHandler(this))
+                        "HttpInterceptorHandler",
+                        MitmHandler(httpInterceptor))
 
                 ctx.pipeline().addBefore("HttpInterceptorHandler", "CorrectCRLFHander", CorrectCRLFHander())
-            }
         }
 
         ctx.fireChannelRead(msg)
