@@ -60,6 +60,7 @@ class ProxyServer {
                     get() = object : HttpInterceptorMatcher {
                         override fun match(host: String): HttpInterceptor? {
                             return when {
+                                host.contains("fengguang.me") -> BaiduHttpInterceptor()
                                 host.contains("baidu") -> BaiduHttpInterceptor()
                                 else -> null
                             }

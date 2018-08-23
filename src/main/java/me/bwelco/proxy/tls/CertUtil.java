@@ -50,11 +50,11 @@ public class CertUtil {
     }
 
     /**
-     * 生成RSA公私密钥对,长度为2048
+     * 生成RSA公私密钥对,长度为1024
      */
     public static KeyPair genKeyPair() throws Exception {
         KeyPairGenerator caKeyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
-        caKeyPairGen.initialize(2048, new SecureRandom());
+        caKeyPairGen.initialize(1024, new SecureRandom());
         return caKeyPairGen.genKeyPair();
     }
 
@@ -193,7 +193,7 @@ public class CertUtil {
         /* String issuer = "C=CN, ST=GD, L=SZ, O=lee, OU=study, CN=ProxyeeRoot";
         String subject = "C=CN, ST=GD, L=SZ, O=lee, OU=study, CN=" + host;*/
         //根据CA证书subject来动态生成目标服务器证书的issuer和subject
-        String subject = "C=CN, ST=GD, L=SZ, O=lee, OU=study, CN=" + hosts[0];
+        String subject = "C=CN, ST=Zhejiang, L=Hangzhou, O=Youzan, OU=mobile, CN=" + hosts[0];
         //doc from https://www.cryptoworkshop.com/guide/
         JcaX509v3CertificateBuilder jv3Builder = new JcaX509v3CertificateBuilder(new X500Name(issuer),
                 //issue#3 修复ElementaryOS上证书不安全问题(serialNumber为1时证书会提示不安全)，避免serialNumber冲突，采用时间戳+4位随机数生成
