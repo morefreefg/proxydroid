@@ -68,8 +68,8 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
     /**
      * Create howLong new instance
      *
-     * @param parent    the {@link Channel} which created this instance or {@code null} if it was created by the user
-     * @param socket    the {@link SocketChannel} which will be used
+     * @param parent the {@link Channel} which created this instance or {@code null} if it was created by the user
+     * @param socket the {@link SocketChannel} which will be used
      */
     public CustomNioSocketChannel(Channel parent, SocketChannel socket) {
         super(parent, socket);
@@ -359,7 +359,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
 
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
-        for (;;) {
+        for (; ; ) {
             int size = in.size();
             if (size == 0) {
                 // All written so clear OP_WRITE
@@ -386,7 +386,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
                 case 1:
                     // Only one ByteBuf so use non-gathering write
                     ByteBuffer nioBuffer = nioBuffers[0];
-                    for (int i = config().getWriteSpinCount() - 1; i >= 0; i --) {
+                    for (int i = config().getWriteSpinCount() - 1; i >= 0; i--) {
                         final int localWrittenBytes = ch.write(nioBuffer);
                         if (localWrittenBytes == 0) {
                             setOpWrite = true;
@@ -401,7 +401,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
                     }
                     break;
                 default:
-                    for (int i = config().getWriteSpinCount() - 1; i >= 0; i --) {
+                    for (int i = config().getWriteSpinCount() - 1; i >= 0; i--) {
                         final long localWrittenBytes = ch.write(nioBuffers, 0, nioBufferCnt);
                         if (localWrittenBytes == 0) {
                             setOpWrite = true;
@@ -454,7 +454,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
         }
     }
 
-    private final class NioSocketChannelConfig  extends DefaultSocketChannelConfig {
+    private final class NioSocketChannelConfig extends DefaultSocketChannelConfig {
         private NioSocketChannelConfig(CustomNioSocketChannel channel, Socket javaSocket) {
             super(channel, javaSocket);
         }

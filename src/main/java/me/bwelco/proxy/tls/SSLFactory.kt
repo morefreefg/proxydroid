@@ -51,6 +51,6 @@ object SSLFactory {
     }
 
     fun preloadCertificate(hostList: List<String>) {
-        Thread { hostList.forEach { newCert(it)} }.start()
+        Thread { hostList.forEach { newCert(it) } }.start()
     }
 }

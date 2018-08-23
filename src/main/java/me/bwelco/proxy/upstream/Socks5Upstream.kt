@@ -51,7 +51,7 @@ class Socks5Upstream(val request: Socks5CommandRequest,
 
     class SocksClientInitializer(val downStreamChannel: Channel,
                                  val request: Socks5CommandRequest,
-                                 val promise: Promise<Channel>): ChannelInboundHandlerAdapter() {
+                                 val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
 
         override fun channelActive(ctx: ChannelHandlerContext) {
             val inBoundChannel = ctx.channel()
@@ -65,7 +65,7 @@ class Socks5Upstream(val request: Socks5CommandRequest,
             }
         }
 
-        inner class Socks5InitialResponseHandler: SimpleChannelInboundHandler<DefaultSocks5InitialResponse>() {
+        inner class Socks5InitialResponseHandler : SimpleChannelInboundHandler<DefaultSocks5InitialResponse>() {
 
             override fun channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5InitialResponse) {
 
@@ -82,7 +82,7 @@ class Socks5Upstream(val request: Socks5CommandRequest,
             }
         }
 
-        inner class SocksCommandResponseHandler: SimpleChannelInboundHandler<DefaultSocks5CommandResponse>() {
+        inner class SocksCommandResponseHandler : SimpleChannelInboundHandler<DefaultSocks5CommandResponse>() {
 
             override fun channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5CommandResponse) {
                 if (msg.decoderResult().isSuccess) {

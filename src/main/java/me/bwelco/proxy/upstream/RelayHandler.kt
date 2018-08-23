@@ -7,7 +7,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.ReferenceCountUtil
 import me.bwelco.proxy.downstream.SocksServerUtils
 
-class RelayHandler(val relayChannel: Channel): ChannelInboundHandlerAdapter() {
+class RelayHandler(val relayChannel: Channel) : ChannelInboundHandlerAdapter() {
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)

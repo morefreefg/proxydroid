@@ -11,11 +11,11 @@ import io.netty.handler.codec.socksx.v5.*
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
 
 @ChannelHandler.Sharable
-class SocksServerHandler(val upstreamMatchHandler: UpstreamMatchHandler): SimpleChannelInboundHandler<SocksMessage>() {
+class SocksServerHandler(val upstreamMatchHandler: UpstreamMatchHandler) : SimpleChannelInboundHandler<SocksMessage>() {
 
-    override fun channelRead0(ctx: ChannelHandlerContext,  socksRequest: SocksMessage) {
+    override fun channelRead0(ctx: ChannelHandlerContext, socksRequest: SocksMessage) {
 
-        when(socksRequest.version()) {
+        when (socksRequest.version()) {
             SocksVersion.SOCKS4a -> {
                 val socksV4CmdRequest = socksRequest as Socks4CommandRequest
                 if (socksV4CmdRequest.type() === Socks4CommandType.CONNECT) {

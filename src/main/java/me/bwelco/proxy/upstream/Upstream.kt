@@ -10,4 +10,4 @@ import io.netty.util.concurrent.Promise
  * promise: when set promise success, will start to direct downstream to upstream
  */
 abstract class Upstream(request: Socks5CommandRequest,
-                        promise: Promise<Channel>): ChannelInboundHandlerAdapter()
+                        promise: Promise<Channel>) : ChannelInboundHandlerAdapter()

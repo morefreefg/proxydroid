@@ -6,7 +6,7 @@ import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.Upstream
 
-class DirectProxy: Proxy() {
+class DirectProxy : Proxy() {
 
     override fun createProxyHandler(request: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
         return DirectUpstream(request, promise)

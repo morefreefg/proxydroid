@@ -9,8 +9,8 @@ import io.netty.handler.codec.http.FullHttpResponse
 import me.bwelco.proxy.config.Config
 import me.bwelco.proxy.config.HttpInterceptorConfig
 import me.bwelco.proxy.config.ProxyConfig
-import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.downstream.SocksServerInitializer
+import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.Proxy
 import me.bwelco.proxy.proxy.Socks5Proxy

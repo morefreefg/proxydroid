@@ -6,7 +6,7 @@ import io.netty.channel.ChannelPromise
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 
-class MitmHandler(val httpInterceptor: HttpInterceptor): ChannelDuplexHandler() {
+class MitmHandler(val httpInterceptor: HttpInterceptor) : ChannelDuplexHandler() {
 
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
         if (msg is FullHttpRequest) {
