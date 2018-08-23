@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ReplayingDecoder
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class SslSelectHandler(val remoteChannel: Channel) : ReplayingDecoder<SslSelectHandler.State>(State.INIT) {
+class ProtocolSelectHandler(val remoteChannel: Channel) : ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT) {
 
     companion object {
         val SSL_RT_HANDSHAKE = 0x16

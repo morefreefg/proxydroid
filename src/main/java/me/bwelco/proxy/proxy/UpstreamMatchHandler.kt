@@ -12,7 +12,7 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.downstream.SocksServerUtils
-import me.bwelco.proxy.http.SslSelectHandler
+import me.bwelco.proxy.http.ProtocolSelectHandler
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.Upstream
 import org.koin.standalone.KoinComponent
@@ -30,7 +30,7 @@ class UpstreamMatchHandler : SimpleChannelInboundHandler<SocksMessage>(), KoinCo
     }
 
     fun doFollowUp(clientChannel: Channel, remoteChannel: Channel) {
-        clientChannel.pipeline().addLast(SslSelectHandler(remoteChannel))
+        clientChannel.pipeline().addLast(ProtocolSelectHandler(remoteChannel))
     }
 
     override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {

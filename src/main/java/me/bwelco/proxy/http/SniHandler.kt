@@ -36,21 +36,10 @@ class SniHandler(val remoteChannel: Channel) : AbstractSniHandler<String>(), Koi
 
             // downstream
             ctx.pipeline().replace(this, "downStreamTlshandler", downStreamTlsHandler)
-            ctx.pipeline().addLast(HttpResponseEncoder())
-            ctx.pipeline().addLast(HttpRequestDecoder())
-            ctx.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            ctx.pipeline().addLast("HttpInterceptorHandler",
-                    HttpInterceptorHandler(httpInterceptor))
-            ctx.pipeline().addLast(RelayHandler(remoteChannel))
-
-            // upstream
             remoteChannel.pipeline().addFirst("upstreamTlsHandler", upstreamTlsHandler)
-            remoteChannel.pipeline().addLast(LoggingHandler())
-            remoteChannel.pipeline().addLast(HttpResponseDecoder())
-            remoteChannel.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
-            remoteChannel.pipeline().addLast(HttpRequestEncoder())
 
+            ctx.pipeline().addLast(HttpInterceptorInitializer(remoteChannel, httpInterceptor))
+            ctx.pipeline().fireChannelActive()
             remoteChannel.pipeline().fireChannelActive()
         }
     }
