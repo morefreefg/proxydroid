@@ -2,8 +2,7 @@ package me.bwelco.proxy.http
 
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.*
-import io.netty.handler.logging.LoggingHandler
+import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.ssl.AbstractSniHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.concurrent.Future
@@ -14,7 +13,8 @@ import me.bwelco.proxy.util.isEmpty
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
-class SniHandler(val remoteChannel: Channel) : AbstractSniHandler<String>(), KoinComponent {
+class SniHandler(val remoteChannel: Channel,
+                 val socks5Request: Socks5CommandRequest) : AbstractSniHandler<String>(), KoinComponent {
 
     val proxyConfig: ProxyConfig by inject()
 
@@ -38,7 +38,7 @@ class SniHandler(val remoteChannel: Channel) : AbstractSniHandler<String>(), Koi
             ctx.pipeline().replace(this, "downStreamTlshandler", downStreamTlsHandler)
             remoteChannel.pipeline().addFirst("upstreamTlsHandler", upstreamTlsHandler)
 
-            ctx.pipeline().addLast(HttpInterceptorInitializer(remoteChannel, httpInterceptor))
+            ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
             ctx.pipeline().fireChannelActive()
             remoteChannel.pipeline().fireChannelActive()
         }
@@ -46,5 +46,14 @@ class SniHandler(val remoteChannel: Channel) : AbstractSniHandler<String>(), Koi
 
     override fun lookup(ctx: ChannelHandlerContext, hostname: String): Future<String> {
         return ctx.executor().newPromise<String>().setSuccess("success")
+    }
+
+    /**
+     * tls check error
+     */
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
+        ctx.pipeline().fireChannelActive()
+        remoteChannel.pipeline().fireChannelActive()
     }
 }

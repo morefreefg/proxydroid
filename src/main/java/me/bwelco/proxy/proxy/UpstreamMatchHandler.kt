@@ -29,8 +29,8 @@ class UpstreamMatchHandler : SimpleChannelInboundHandler<SocksMessage>(), KoinCo
                 ?: DirectUpstream(message, promise)
     }
 
-    fun doFollowUp(clientChannel: Channel, remoteChannel: Channel) {
-        clientChannel.pipeline().addLast(ProtocolSelectHandler(remoteChannel))
+    fun doFollowUp(clientChannel: Channel, remoteChannel: Channel, commandRequest: Socks5CommandRequest) {
+        clientChannel.pipeline().addLast(ProtocolSelectHandler(remoteChannel, commandRequest))
     }
 
     override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {
@@ -56,7 +56,7 @@ class UpstreamMatchHandler : SimpleChannelInboundHandler<SocksMessage>(), KoinCo
                 clientCtx.pipeline().remove(this)
                 clientCtx.pipeline().addLast(matchUpstream(message, commandResponsePromise.addListener {
                     if (it.isSuccess) {
-                        doFollowUp(clientCtx.channel(), it.now as Channel)
+                        doFollowUp(clientCtx.channel(), it.now as Channel, message)
                     }
                 }))
 

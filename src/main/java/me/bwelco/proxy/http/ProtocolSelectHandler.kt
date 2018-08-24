@@ -3,10 +3,19 @@ package me.bwelco.proxy.http
 import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.ReplayingDecoder
+import io.netty.handler.codec.http.HttpRequest
+import io.netty.handler.codec.http.HttpRequestDecoder
+import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
+import me.bwelco.proxy.config.ProxyConfig
+import me.bwelco.proxy.upstream.RelayHandler
+import org.koin.standalone.KoinComponent
+import org.koin.standalone.inject
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class ProtocolSelectHandler(val remoteChannel: Channel) : ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT) {
+class ProtocolSelectHandler(val remoteChannel: Channel, val socks5Request: Socks5CommandRequest) :
+        ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT){
 
     companion object {
         val SSL_RT_HANDSHAKE = 0x16
@@ -39,9 +48,10 @@ class ProtocolSelectHandler(val remoteChannel: Channel) : ReplayingDecoder<Proto
 
                 // is TLS
                 if (type.toInt() == SSL_RT_HANDSHAKE && SUPPORTED_TLS_VERSIONS.contains(version)) {
-                    ctx.pipeline().addLast(SniHandler(remoteChannel))
+                    ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request))
                 } else {
-
+                    ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
+                    ctx.pipeline().fireChannelActive()
                 }
 
                 checkpoint(State.SUCCESS)
@@ -60,5 +70,4 @@ class ProtocolSelectHandler(val remoteChannel: Channel) : ReplayingDecoder<Proto
             }
         }
     }
-
 }
