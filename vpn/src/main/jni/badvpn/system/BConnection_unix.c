@@ -474,7 +474,7 @@ int BListener_InitFrom (BListener *o, struct BLisCon_from from,
         
         // init fd
         if ((o->fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-            BLog(BLOG_ERROR, "socket failed 7");
+            BLog(BLOG_ERROR, "socket failed");
             goto fail1;
         }
     } else {
@@ -489,7 +489,7 @@ int BListener_InitFrom (BListener *o, struct BLisCon_from from,
         
         // init fd
         if ((o->fd = socket(sysaddr.addr.generic.sa_family, SOCK_STREAM, 0)) < 0) {
-            BLog(BLOG_ERROR, "socket failed 1");
+            BLog(BLOG_ERROR, "socket failed");
             goto fail1;
         }
     }
@@ -503,7 +503,7 @@ int BListener_InitFrom (BListener *o, struct BLisCon_from from,
     if (from.type == BLISCON_FROM_UNIX) {
         // unlink existing socket
         if (unlink(o->unix_socket_path) < 0 && errno != ENOENT) {
-            BLog(BLOG_ERROR, "unlink existing socket failed 2");
+            BLog(BLOG_ERROR, "unlink existing socket failed");
             goto fail2;
         }
         
@@ -549,7 +549,7 @@ int BListener_InitFrom (BListener *o, struct BLisCon_from from,
 fail3:
     if (from.type == BLISCON_FROM_UNIX) {
         if (unlink(o->unix_socket_path) < 0) {
-            BLog(BLOG_ERROR, "unlink socket failed 3");
+            BLog(BLOG_ERROR, "unlink socket failed");
         }
     }
 fail2:
@@ -580,7 +580,7 @@ void BListener_Free (BListener *o)
     // unlink unix socket
     if (o->unix_socket_path) {
         if (unlink(o->unix_socket_path) < 0) {
-            BLog(BLOG_ERROR, "unlink socket failed 4");
+            BLog(BLOG_ERROR, "unlink socket failed");
         }
     }
     
@@ -629,15 +629,13 @@ int BConnector_InitFrom (BConnector *o, struct BLisCon_from from, BReactor *reac
     if (from.type == BLISCON_FROM_UNIX) {
         // init fd
         if ((o->fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-            BLog(BLOG_ERROR, "socket failed 5");
+            BLog(BLOG_ERROR, "socket failed");
             goto fail1;
         }
     } else {
         // init fd
-        int fd = socket(sysaddr.addr.generic.sa_family, SOCK_STREAM, 0);
-        BLog(BLOG_ERROR, "socket failed 6, fd = %d", fd);
-        if ((o->fd = fd) < 0) {
-            BLog(BLOG_ERROR, "socket failed 6");
+        if ((o->fd = socket(sysaddr.addr.generic.sa_family, SOCK_STREAM, 0)) < 0) {
+            BLog(BLOG_ERROR, "socket failed");
             goto fail1;
         }
     }

@@ -404,9 +404,11 @@ int main (int argc, char **argv)
         goto fail0;
     }
 
-//    if (options.fake_proc) {
-//        // Fake process name to cheat on Lollipop
-//    }
+    if (options.fake_proc) {
+        // Fake process name to cheat on Lollipop
+        strcpy(argv[0], "com.github.shadowsocks");
+        prctl(PR_SET_NAME, "com.github.shadowsocks");
+    }
 
     // handle --help and --version
     if (options.help) {
@@ -498,7 +500,7 @@ int main (int argc, char **argv)
         goto fail2;
     }
 
-    char *path = "";
+    char *path = "/data/data/com.github.shadowsocks/sock_path";
     if (options.sock_path != NULL) {
         path = options.sock_path;
     }
@@ -532,7 +534,7 @@ int main (int argc, char **argv)
             close(sock2);
         } else {
             close(sock2);
-            BLog(BLOG_NOTICE, "received fd = %d", fd);
+            BLog(BLOG_INFO, "received fd = %d", fd);
             break;
         }
     }
@@ -1602,7 +1604,6 @@ err_t listener_accept_func (void *arg, struct tcp_pcb *newpcb, err_t err)
         socks_auth_info[1].password.username_len = strlen(client->socks_username);
     }
 
-    BLog(BLOG_DEBUG, "im here");
     // init SOCKS
     if (!BSocksClient_Init(&client->socks_client, socks_server_addr, socks_auth_info, socks_num_auth_info,
                            addr, (BSocksClient_handler)client_socks_handler, client, &ss)) {

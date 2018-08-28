@@ -549,7 +549,7 @@ int BSocksClient_Init (BSocksClient *o,
     
     // init connector
     if (!BConnector_Init(&o->connector, server_addr, o->reactor, o, (BConnector_handler)connector_handler)) {
-        BLog(BLOG_ERROR, "BConnector_Init failed here");
+        BLog(BLOG_ERROR, "BConnector_Init failed");
         goto fail0;
     }
     
