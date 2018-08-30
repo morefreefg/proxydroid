@@ -88,6 +88,15 @@ class ProxyService : BaseVpnService() {
         val worker = ProtectWorker()
         worker.start()
 
+        Thread {
+            ProxyServer.start(1080) {
+                it?.apply {
+                    Log.i("admin", "protect ${it}")
+                    protect(it)
+                }
+            }
+        }.start()
+
         startForeground(1, getNotification())
 
         val intent = Intent("proxy://setting/settingPage")
@@ -100,7 +109,10 @@ class ProxyService : BaseVpnService() {
                 .setSession("what session")
                 .setMtu(VPN_MTU)
                 .addAddress(PRIVATE_VLAN.format(Locale.ENGLISH, "1"), 24)
-        val conn = builder.establish() ?: return
+
+        val conn = builder.establish()
+
+        if (conn == null) return
 
         val connectFD = conn.fd
 
@@ -108,7 +120,7 @@ class ProxyService : BaseVpnService() {
         val cmd = arrayListOf(File(applicationInfo.nativeLibraryDir, TUN2SOCKS).absolutePath,
                 "--netif-ipaddr", PRIVATE_VLAN.format(Locale.ENGLISH, "2"),
                 "--netif-netmask", "255.255.255.0",
-                "--socks-server-addr", "172.17.13.68:6153",
+                "--socks-server-addr", "127.0.0.1:1080",
                 "--tunfd", connectFD.toString(),
                 "--tunmtu", VPN_MTU.toString(),
                 "--sock-path", "sock_path",

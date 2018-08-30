@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="me.bwelco.proxy">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -13,8 +15,7 @@
             android:name="me.bwelco.proxy.ProxyService"
             android:directBootAware="true"
             android:exported="false"
-            android:permission="android.permission.BIND_VPN_SERVICE"
-            android:process=":bg">
+            android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>

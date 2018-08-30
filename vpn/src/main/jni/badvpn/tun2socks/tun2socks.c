@@ -500,7 +500,7 @@ int main (int argc, char **argv)
         goto fail2;
     }
 
-    char *path = "/data/data/com.github.shadowsocks/sock_path";
+    char *path = "/data/data/me.bwelco.demo/sock_path";
     if (options.sock_path != NULL) {
         path = options.sock_path;
     }

@@ -19,11 +19,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val intent = VpnService.prepare(this)
-        if (intent == null) {
-            startProxy()
-        } else {
-            startActivityForResult(intent, REQUEST_CONNECT)
+
+        findViewById<Button>(R.id.start_proxy).setOnClickListener {
+            val intent = VpnService.prepare(this)
+            if (intent == null) {
+                startProxy()
+            } else {
+                startActivityForResult(intent, REQUEST_CONNECT)
+            }
         }
 
         findViewById<Button>(R.id.stop_proxy).setOnClickListener {

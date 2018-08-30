@@ -23,7 +23,7 @@ import org.koin.standalone.StandAloneContext.startKoin
 import java.net.Socket
 
 fun main(args: Array<String>) {
-    ProxyServer().start(1080)
+    ProxyServer.start(1080)
 }
 
 class BaiduHttpInterceptor : HttpInterceptor {
@@ -49,7 +49,7 @@ class BaiduHttpInterceptor : HttpInterceptor {
     }
 }
 
-class ProxyServer {
+object ProxyServer {
 
     val logger = LogFactory.getLog(ProxyServer::class.java)
 
@@ -60,8 +60,8 @@ class ProxyServer {
                     get() = object : HttpInterceptorMatcher {
                         override fun match(host: String): HttpInterceptor? {
                             return when {
-                                host.contains("360") -> BaiduHttpInterceptor()
-                                host.contains("baidu") -> BaiduHttpInterceptor()
+//                                host.contains("360") -> BaiduHttpInterceptor()
+//                                host.contains("baidu") -> BaiduHttpInterceptor()
                                 else -> null
                             }
                         }
@@ -76,9 +76,9 @@ class ProxyServer {
 
         override fun proxyMatcher(host: String): String {
             return when {
-                host.contains("fengguang") -> "DIRECT"
-                host.contains("baidu") -> "DIRECT"
-                host.contains("google") -> "socks"
+//                host.contains("fengguang") -> "DIRECT"
+//                host.contains("baidu") -> "DIRECT"
+//                host.contains("google") -> "socks"
                 else -> "DIRECT"
             }
         }
@@ -88,15 +88,16 @@ class ProxyServer {
         }
     }
 
-    fun start(port: Int, onConnectListener: (Socket) -> Unit = {}) {
-//        SSLFactory.preloadCertificate(listOf("baidu.com"))
+    val myModule: Module = applicationContext {
+        bean { ProxyConfig(config) } // get() will resolve Repository instance
+    }
 
-        // Koin module
-        val myModule: Module = applicationContext {
-            bean { ProxyConfig(config) } // get() will resolve Repository instance
-        }
-
+    init {
         startKoin(listOf(myModule))
+    }
+
+    fun start(port: Int, onConnectListener: (Socket?) -> Unit = {}) {
+//        SSLFactory.preloadCertificate(listOf("baidu.com"))
 
         val bossGroup = NioEventLoopGroup(1)
         val workerGroup = NioEventLoopGroup()
@@ -104,7 +105,7 @@ class ProxyServer {
             val b = ServerBootstrap()
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel::class.java)
-                    .childHandler(SocksServerInitializer(UpstreamMatchHandler()))
+                    .childHandler(SocksServerInitializer(UpstreamMatchHandler(onConnectListener)))
             logger.debug("start server at: $port")
             b.bind(port).sync().channel().closeFuture().sync()
         } finally {
