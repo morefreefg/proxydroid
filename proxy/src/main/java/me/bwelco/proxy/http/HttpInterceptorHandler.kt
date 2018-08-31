@@ -7,6 +7,7 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.logging.LoggingHandler
 import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.upstream.RelayHandler
+import me.bwelco.proxy.upstream.RelayHandler2
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
@@ -31,14 +32,21 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
 
                 if (httpInterceptor == null) {
                     ctx.pipeline().addLast(RelayHandler(remoteChannel))
-                    remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+//                    remoteChannel.pipeline().addLast(HttpRequestEncoder())
+                    remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
+
+                    remoteChannel.pipeline().addLast(object : ChannelOutboundHandlerAdapter() {
+                        override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
+                            super.write(ctx, msg, promise)
+                        }
+                    })
                 } else {
                     ctx.pipeline().addLast(MitmInitializer(remoteChannel, httpInterceptor))
                 }
             } else {
                 // not http, direct
                 ctx.pipeline().addLast(RelayHandler(remoteChannel))
-                remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+                remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
             }
 
             ctx.pipeline().remove(this)

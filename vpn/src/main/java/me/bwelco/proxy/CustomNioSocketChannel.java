@@ -1,5 +1,10 @@
 package me.bwelco.proxy;
 
+import android.net.LocalSocket;
+import android.net.LocalSocketAddress;
+import android.text.TextUtils;
+import android.util.Log;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.AbstractNioByteChannel;
@@ -12,7 +17,10 @@ import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -27,6 +35,19 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     public Socket rawSocket = null;
+
+    private Method getFileDescriptor;
+
+    private Method getInt;
+
+    {
+        try {
+            getFileDescriptor = Socket.class.getDeclaredMethod("getFileDescriptor$");
+            getInt = FileDescriptor.class.getDeclaredMethod("getInt$");
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
 
     private static SocketChannel newSocket(SelectorProvider provider) {
         try {
@@ -69,12 +90,48 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
      * Create howLong new instance
      *
      * @param parent the {@link Channel} which created this instance or {@code null} if it was created by the user
-     * @param socket the {@link SocketChannel} which will be used
+     * @param socketChannel the {@link SocketChannel} which will be used
      */
-    public CustomNioSocketChannel(Channel parent, SocketChannel socket) {
-        super(parent, socket);
-        this.rawSocket = socket.socket();
-        config = new NioSocketChannelConfig(this, socket.socket());
+    public CustomNioSocketChannel(Channel parent, SocketChannel socketChannel) {
+        super(parent, socketChannel);
+        this.rawSocket = socketChannel.socket();
+        config = new NioSocketChannelConfig(this, socketChannel.socket());
+
+        String protectPath = ProxyService.protectPath;
+
+
+        if (!TextUtils.isEmpty(protectPath)) {
+
+            LocalSocket localSocket = new LocalSocket();
+            try {
+                localSocket.connect(new LocalSocketAddress(protectPath, LocalSocketAddress.Namespace.FILESYSTEM));
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    localSocket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+
+            if (this.getFileDescriptor != null) {
+                try {
+                    FileDescriptor fileDescriptor = (FileDescriptor) getFileDescriptor.invoke(socketChannel.socket());
+                    Log.i("admin", "protect int: " + getInt.invoke(fileDescriptor));
+
+                    localSocket.setFileDescriptorsForSend(new FileDescriptor[]{fileDescriptor});
+                    localSocket.getOutputStream().write(0);
+                    int result = localSocket.getInputStream().read();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
     }
 
     @Override

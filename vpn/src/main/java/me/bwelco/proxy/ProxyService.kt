@@ -34,6 +34,8 @@ class ProxyService : BaseVpnService() {
         const val STOP_COMMAND = 2
 
         const val COMMAND = "command"
+
+        @JvmField var protectPath: String? = null
     }
 
     private var underlyingNetwork: Network? = null
@@ -44,7 +46,7 @@ class ProxyService : BaseVpnService() {
         }
 
     private inner class ProtectWorker : LocalSocketListener("ShadowsocksVpnThread") {
-        override val socketFile: File = File(this@ProxyService.application.filesDir, "protect_path")
+        override val socketFile: File = File(protectPath)
 
         override fun accept(socket: LocalSocket) {
             try {
@@ -54,9 +56,13 @@ class ProxyService : BaseVpnService() {
                 socket.outputStream.write(if (try {
                             val network = underlyingNetwork
                             if (network != null && Build.VERSION.SDK_INT >= 23) {
+                                Log.i("admin", "here2 protect int: ${fdInt}")
                                 network.bindSocket(fd)
                                 true
-                            } else protect(fdInt)
+                            } else {
+                                Log.i("admin", "here protect int: ${fdInt}")
+                                protect(fdInt)
+                            }
                         } finally {
                             JniHelper.close(fdInt) // Trick to close file decriptor
                         }) 0 else 1)
@@ -85,16 +91,13 @@ class ProxyService : BaseVpnService() {
     }
 
     fun startProxy() {
+        protectPath = File(this@ProxyService.application.filesDir, "protect_path").absolutePath
+
         val worker = ProtectWorker()
         worker.start()
 
         Thread {
-            ProxyServer.start(1080) {
-                it?.apply {
-                    Log.i("admin", "protect ${it}")
-                    protect(it)
-                }
-            }
+            ProxyServer.start(1080, CustomNioSocketChannel::class.java)
         }.start()
 
         startForeground(1, getNotification())

@@ -2,8 +2,10 @@ package me.bwelco.proxy
 
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.Unpooled
+import io.netty.channel.Channel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 import me.bwelco.proxy.config.Config
@@ -15,15 +17,14 @@ import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.Proxy
 import me.bwelco.proxy.proxy.Socks5Proxy
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
-import me.bwelco.proxy.tls.SSLFactory
 import org.apache.commons.logging.LogFactory
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.applicationContext
+import org.koin.standalone.StandAloneContext.closeKoin
 import org.koin.standalone.StandAloneContext.startKoin
-import java.net.Socket
 
 fun main(args: Array<String>) {
-    ProxyServer.start(1080)
+    ProxyServer.start(1080, NioSocketChannel::class.java)
 }
 
 class BaiduHttpInterceptor : HttpInterceptor {
@@ -60,8 +61,8 @@ object ProxyServer {
                     get() = object : HttpInterceptorMatcher {
                         override fun match(host: String): HttpInterceptor? {
                             return when {
-//                                host.contains("360") -> BaiduHttpInterceptor()
-//                                host.contains("baidu") -> BaiduHttpInterceptor()
+                                host.contains("360") -> BaiduHttpInterceptor()
+                                host.contains("baidu") -> BaiduHttpInterceptor()
                                 else -> null
                             }
                         }
@@ -76,9 +77,9 @@ object ProxyServer {
 
         override fun proxyMatcher(host: String): String {
             return when {
-//                host.contains("fengguang") -> "DIRECT"
-//                host.contains("baidu") -> "DIRECT"
-//                host.contains("google") -> "socks"
+                host.contains("fengguang") -> "DIRECT"
+                host.contains("baidu") -> "DIRECT"
+                host.contains("google") -> "socks"
                 else -> "DIRECT"
             }
         }
@@ -88,16 +89,14 @@ object ProxyServer {
         }
     }
 
-    val myModule: Module = applicationContext {
-        bean { ProxyConfig(config) } // get() will resolve Repository instance
-    }
+    fun start(port: Int, remoteChannelClazz: Class<out Channel>) {
 
-    init {
+        val myModule: Module = applicationContext {
+            bean("proxyConfig") { ProxyConfig(config) } // get() will resolve Repository instance
+            bean("remoteChannelClazz") { remoteChannelClazz }
+        }
+
         startKoin(listOf(myModule))
-    }
-
-    fun start(port: Int, onConnectListener: (Socket?) -> Unit = {}) {
-//        SSLFactory.preloadCertificate(listOf("baidu.com"))
 
         val bossGroup = NioEventLoopGroup(1)
         val workerGroup = NioEventLoopGroup()
@@ -105,12 +104,13 @@ object ProxyServer {
             val b = ServerBootstrap()
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel::class.java)
-                    .childHandler(SocksServerInitializer(UpstreamMatchHandler(onConnectListener)))
+                    .childHandler(SocksServerInitializer(UpstreamMatchHandler()))
             logger.debug("start server at: $port")
             b.bind(port).sync().channel().closeFuture().sync()
         } finally {
             bossGroup.shutdownGracefully()
             workerGroup.shutdownGracefully()
+            closeKoin()
         }
     }
 }

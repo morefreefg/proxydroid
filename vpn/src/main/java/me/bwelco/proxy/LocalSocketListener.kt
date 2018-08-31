@@ -36,6 +36,7 @@ abstract class LocalSocketListener(protected val tag: String) : Thread(tag) {
      * Inherited class do not need to close input/output streams as they will be closed automatically.
      */
     protected abstract fun accept(socket: LocalSocket)
+
     final override fun run() {
         socketFile.delete() // It's a must-have to close and reuse previous local socket.
         LocalSocket().use { localSocket ->

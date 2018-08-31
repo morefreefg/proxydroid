@@ -10,7 +10,6 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.config.ProxyConfig
 import me.bwelco.proxy.downstream.SocksServerUtils
 import me.bwelco.proxy.http.ProtocolSelectHandler
@@ -18,10 +17,9 @@ import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.Upstream
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
-import java.net.Socket
 
 @ChannelHandler.Sharable
-class UpstreamMatchHandler(val onConnectListener: (Socket?)-> Unit) :
+class UpstreamMatchHandler :
         SimpleChannelInboundHandler<SocksMessage>(), KoinComponent {
 
     val proxyConfig: ProxyConfig by inject()
@@ -60,8 +58,6 @@ class UpstreamMatchHandler(val onConnectListener: (Socket?)-> Unit) :
                 clientCtx.pipeline().addLast(matchUpstream(message, commandResponsePromise.addListener {
                     if (it.isSuccess) {
                         val remoteChannel = it.now as Channel
-                        val socketChannel = (remoteChannel.pipeline().channel() as CustomNioSocketChannel).rawSocket
-                        onConnectListener(socketChannel)
                         doFollowUp(clientCtx.channel(), remoteChannel, message)
                     }
                 }))

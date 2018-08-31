@@ -6,14 +6,16 @@ import io.netty.handler.codec.socksx.v5.*
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.CustomNioSocketChannel
 import me.bwelco.proxy.util.addFutureListener
+import org.koin.standalone.inject
 import java.net.InetAddress
 
 class Socks5Upstream(val request: Socks5CommandRequest,
                      val promise: Promise<Channel>,
                      val remoteSocks5Server: InetAddress,
                      val remoteSocks5ServerPort: Int) : Upstream(request, promise) {
+
+    private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 
     val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
@@ -23,7 +25,7 @@ class Socks5Upstream(val request: Socks5CommandRequest,
         thisClientHandlerCtx = ctx
 
         bootstrap.group(clientChannel.eventLoop())
-                .channel(CustomNioSocketChannel::class.java)
+                .channel(remoteChannelClazz)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(LoggingHandler(LogLevel.INFO))
