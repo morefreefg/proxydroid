@@ -31,15 +31,20 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
                 val httpInterceptor = proxyConfig.mitmConfig().httpInterceptorMatcher.match(host)
 
                 if (httpInterceptor == null) {
-                    ctx.pipeline().addLast(RelayHandler(remoteChannel))
+                    try {
+                        ctx.pipeline().addLast(RelayHandler(remoteChannel))
 //                    remoteChannel.pipeline().addLast(HttpRequestEncoder())
-                    remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
+                        remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
 
-                    remoteChannel.pipeline().addLast(object : ChannelOutboundHandlerAdapter() {
-                        override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
-                            super.write(ctx, msg, promise)
-                        }
-                    })
+                        remoteChannel.pipeline().addFirst(object : ChannelOutboundHandlerAdapter() {
+                            override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
+                                super.write(ctx, msg, promise)
+                            }
+                        })
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
                 } else {
                     ctx.pipeline().addLast(MitmInitializer(remoteChannel, httpInterceptor))
                 }
