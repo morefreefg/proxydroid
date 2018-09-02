@@ -12,8 +12,8 @@ class Socks5Proxy : Proxy() {
     override fun createProxyHandler(request: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
         return Socks5Upstream(request = request,
                 promise = promise,
-                remoteSocks5Server = Inet4Address.getByName("58.20.41.172"),
-                remoteSocks5ServerPort = 1080)
+                remoteSocks5Server = Inet4Address.getByName("192.168.2.105"),
+                remoteSocks5ServerPort = 6153)
     }
 
 }

@@ -77,10 +77,10 @@ object ProxyServer {
 
         override fun proxyMatcher(host: String): String {
             return when {
-                host.contains("fengguang") -> "DIRECT"
-                host.contains("baidu") -> "DIRECT"
-                host.contains("google") -> "socks"
-                else -> "DIRECT"
+//                host.contains("fengguang") -> "DIRECT"
+//                host.contains("baidu") -> "DIRECT"
+//                host.contains("google") -> "socks"
+                else -> "socks"
             }
         }
 
