@@ -33,14 +33,8 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
                 if (httpInterceptor == null) {
                     try {
                         ctx.pipeline().addLast(RelayHandler(remoteChannel))
-//                    remoteChannel.pipeline().addLast(HttpRequestEncoder())
                         remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
-
-                        remoteChannel.pipeline().addFirst(object : ChannelOutboundHandlerAdapter() {
-                            override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
-                                super.write(ctx, msg, promise)
-                            }
-                        })
+                        remoteChannel.pipeline().addLast(HttpRequestEncoder())
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
