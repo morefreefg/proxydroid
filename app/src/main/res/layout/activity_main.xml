@@ -23,5 +23,10 @@
             android:layout_height="wrap_content"
             android:text="@string/stop_proxy" />
 
+        <Button
+            android:text="@string/install_cert"
+            android:id="@+id/install_cert"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

@@ -62,7 +62,8 @@ object ProxyServer {
                         override fun match(host: String): HttpInterceptor? {
                             return when {
                                 host.contains("360") -> BaiduHttpInterceptor()
-                                host.contains("baidu") -> BaiduHttpInterceptor()
+                                host.contains("www.baidu.com") -> BaiduHttpInterceptor()
+                                host.contains("youzan") -> BaiduHttpInterceptor()
                                 else -> null
                             }
                         }

@@ -2,4 +2,5 @@
     <string name="app_name">proxyDroid</string>
     <string name="start_proxy">start_proxy</string>
     <string name="stop_proxy">stop_proxy</string>
+    <string name="install_cert">install cert</string>
 </resources>

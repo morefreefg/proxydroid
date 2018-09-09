@@ -8,6 +8,9 @@ import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.widget.Button
 import me.bwelco.proxy.ProxyService
+import android.security.KeyChain
+import me.bwelco.proxy.tls.CertUtil
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +35,31 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.stop_proxy).setOnClickListener {
             stopProxy()
         }
+
+        findViewById<Button>(R.id.install_cert).setOnClickListener {
+            installCertificate()
+        }
     }
+
+
+    fun installCertificate() {
+        val intent = KeyChain.createInstallIntent()
+        intent.putExtra("CERT", certBytes())
+        intent.putExtra("name", "this is name")
+        startActivityForResult(intent, 1)
+    }
+
+
+    fun certBytes(): ByteArray {
+        val classLoader = Thread.currentThread().contextClassLoader
+        val caCert = classLoader.getResourceAsStream("ca.crt")
+
+        val length = caCert.available()
+        val byteArray = ByteArray(length)
+        caCert.read(byteArray, 0, length)
+        return byteArray
+    }
+
 
     fun startProxy() {
         val intent = Intent(this, ProxyService::class.java)
