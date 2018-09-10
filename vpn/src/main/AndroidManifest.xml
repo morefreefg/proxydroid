@@ -12,6 +12,8 @@
         android:theme="@style/AppTheme">
 
 
+        <activity android:name=".helper.HelperActivity"
+            android:theme="@style/Theme.Transparent"/>
     </application>
 
 </manifest>
