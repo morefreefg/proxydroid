@@ -6,14 +6,16 @@ import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.upstream.Socks5Upstream
 import me.bwelco.proxy.upstream.Upstream
 import java.net.Inet4Address
+import java.net.InetAddress
 
-class Socks5Proxy : Proxy() {
+class Socks5Proxy(val address: InetAddress,
+                  val port: Int) : Proxy() {
 
     override fun createProxyHandler(request: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
         return Socks5Upstream(request = request,
                 promise = promise,
-                remoteSocks5Server = Inet4Address.getByName("192.168.2.105"),
-                remoteSocks5ServerPort = 6153)
+                remoteSocks5Server = address,
+                remoteSocks5ServerPort = port)
     }
 
 }

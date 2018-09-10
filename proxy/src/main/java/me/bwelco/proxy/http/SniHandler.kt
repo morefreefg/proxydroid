@@ -6,7 +6,7 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.ssl.AbstractSniHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.util.concurrent.Future
-import me.bwelco.proxy.config.ProxyConfig
+import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.tls.SSLFactory
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.isEmpty
@@ -16,12 +16,12 @@ import org.koin.standalone.inject
 class SniHandler(val remoteChannel: Channel,
                  val socks5Request: Socks5CommandRequest) : AbstractSniHandler<String>(), KoinComponent {
 
-    val proxyConfig: ProxyConfig by inject()
+    val proxyConfig: ProxyRules by inject()
 
     override fun onLookupComplete(ctx: ChannelHandlerContext, hostname: String, future: Future<String>) {
         if (hostname.isEmpty()) return
 
-        val httpInterceptor = proxyConfig.mitmConfig().httpInterceptorMatcher.match(hostname)
+        val httpInterceptor = proxyConfig.mitmConfig?.match(hostname)
 
         if (httpInterceptor == null) {
             ctx.pipeline().replace(this, "relayHandler", RelayHandler(remoteChannel))

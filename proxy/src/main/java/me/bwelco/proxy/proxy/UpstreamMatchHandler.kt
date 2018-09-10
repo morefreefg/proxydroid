@@ -10,7 +10,7 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.config.ProxyConfig
+import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.downstream.SocksServerUtils
 import me.bwelco.proxy.http.ProtocolSelectHandler
 import me.bwelco.proxy.upstream.DirectUpstream
@@ -22,15 +22,15 @@ import org.koin.standalone.inject
 class UpstreamMatchHandler :
         SimpleChannelInboundHandler<SocksMessage>(), KoinComponent {
 
-    val proxyConfig: ProxyConfig by inject()
+    private val proxyConfig: ProxyRules by inject()
 
-    fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
-        return proxyConfig.proxyList()[proxyConfig.proxyMatcher(message.dstAddr())]
+    private fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
+        return proxyConfig.proxylist[proxyConfig.proxyMatcher(message.dstAddr())]
                 ?.createProxyHandler(message, promise)
                 ?: DirectUpstream(message, promise)
     }
 
-    fun doFollowUp(clientChannel: Channel, remoteChannel: Channel, commandRequest: Socks5CommandRequest) {
+    private fun doFollowUp(clientChannel: Channel, remoteChannel: Channel, commandRequest: Socks5CommandRequest) {
         clientChannel.pipeline().addLast(ProtocolSelectHandler(remoteChannel, commandRequest))
     }
 

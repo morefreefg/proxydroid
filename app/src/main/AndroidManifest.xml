@@ -21,6 +21,17 @@
                     android:scheme="proxy" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".CustomProxyService"
+            android:directBootAware="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

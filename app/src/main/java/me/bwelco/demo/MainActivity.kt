@@ -62,14 +62,14 @@ class MainActivity : AppCompatActivity() {
 
 
     fun startProxy() {
-        val intent = Intent(this, ProxyService::class.java)
+        val intent = Intent(this, CustomProxyService::class.java)
         intent.putExtra(ProxyService.COMMAND, ProxyService.START_COMMAND)
         ContextCompat.startForegroundService(this, intent)
     }
 
 
     fun stopProxy() {
-        val intent = Intent(this, ProxyService::class.java)
+        val intent = Intent(this, CustomProxyService::class.java)
         intent.putExtra(ProxyService.COMMAND, ProxyService.STOP_COMMAND)
         ContextCompat.startForegroundService(this, intent)
     }

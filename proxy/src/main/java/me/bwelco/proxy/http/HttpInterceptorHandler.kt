@@ -5,7 +5,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.logging.LoggingHandler
-import me.bwelco.proxy.config.ProxyConfig
+import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.upstream.RelayHandler2
 import org.koin.standalone.KoinComponent
@@ -23,12 +23,12 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
     class HttpCheckHandler(val remoteChannel: Channel, val socks5Request: Socks5CommandRequest)
         : SimpleChannelInboundHandler<HttpRequest>(), KoinComponent {
 
-        val proxyConfig: ProxyConfig by inject()
+        val proxyConfig: ProxyRules by inject()
 
         override fun channelRead0(ctx: ChannelHandlerContext, msg: HttpRequest) {
             if (msg.decoderResult().isSuccess) {
                 val host = msg.headers()["host"] ?: socks5Request.dstAddr() ?: return
-                val httpInterceptor = proxyConfig.mitmConfig().httpInterceptorMatcher.match(host)
+                val httpInterceptor = proxyConfig.mitmConfig?.match(host)
 
                 if (httpInterceptor == null) {
                     try {

@@ -3,19 +3,18 @@ package me.bwelco.proxy.http
 import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.ReplayingDecoder
-import io.netty.handler.codec.http.HttpRequest
-import io.netty.handler.codec.http.HttpRequestDecoder
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
-import me.bwelco.proxy.config.ProxyConfig
+import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.upstream.RelayHandler
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
 class ProtocolSelectHandler(val remoteChannel: Channel, val socks5Request: Socks5CommandRequest) :
-        ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT){
+        ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT), KoinComponent {
+
+    val proxyConfig: ProxyRules by inject()
 
     companion object {
         val SSL_RT_HANDSHAKE = 0x16
@@ -46,14 +45,19 @@ class ProtocolSelectHandler(val remoteChannel: Channel, val socks5Request: Socks
                 // versionHigh << 8 + versionLow
                 val version = (versionHigh.toInt() shl 8) + versionLow.toInt()
 
-                // is TLS
-                if (type.toInt() == SSL_RT_HANDSHAKE && SUPPORTED_TLS_VERSIONS.contains(version)) {
-                    ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request))
-                } else {
-                    ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
-                    ctx.pipeline().fireChannelActive()
+                val isTls = type.toInt() == SSL_RT_HANDSHAKE && SUPPORTED_TLS_VERSIONS.contains(version)
+                val enableMitm = proxyConfig.mitmConfig != null
+
+                when {
+                    enableMitm && isTls -> ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request))
+                    enableMitm && !isTls -> ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
+                    !enableMitm -> {
+                        ctx.pipeline().addLast(RelayHandler(remoteChannel))
+                        remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+                    }
                 }
 
+                ctx.pipeline().fireChannelActive()
                 checkpoint(State.SUCCESS)
 
                 val readableBytes = actualReadableBytes()

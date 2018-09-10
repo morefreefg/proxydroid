@@ -11,6 +11,7 @@ import android.os.Build
 import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
 import android.util.Log
+import me.bwelco.proxy.rule.Rules
 import java.io.File
 import java.io.FileDescriptor
 import java.io.IOException
@@ -18,7 +19,7 @@ import java.lang.reflect.Method
 import java.util.*
 import android.net.VpnService as BaseVpnService
 
-class ProxyService : BaseVpnService() {
+abstract class ProxyService : BaseVpnService() {
 
 
     private val VPN_MTU = 1500
@@ -28,6 +29,8 @@ class ProxyService : BaseVpnService() {
 
     val processes = GuardedProcessPool()
     private val getInt: Method = FileDescriptor::class.java.getDeclaredMethod("getInt$")
+
+    abstract val rules: Rules
 
     companion object {
         const val START_COMMAND = 1
@@ -97,7 +100,7 @@ class ProxyService : BaseVpnService() {
         worker.start()
 
         Thread {
-            ProxyServer.start(1080, CustomNioSocketChannel::class.java)
+            ProxyServer.start(1080, CustomNioSocketChannel::class.java, rules)
         }.start()
 
         startForeground(1, getNotification())
