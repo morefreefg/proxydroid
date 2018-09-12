@@ -6,7 +6,6 @@ import android.net.VpnService
 import android.os.Bundle
 import android.security.KeyChain
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
 import me.bwelco.proxy.ProxyService
 
 class HelperActivity : Activity() {

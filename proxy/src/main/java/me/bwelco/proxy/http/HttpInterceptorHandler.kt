@@ -5,22 +5,24 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.*
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.logging.LoggingHandler
+import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.rule.ProxyRules
-import me.bwelco.proxy.upstream.RelayHandler
-import me.bwelco.proxy.upstream.RelayHandler2
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
-class HttpInterceptorHandler(val remoteChannel: Channel,
-                             val socks5Request: Socks5CommandRequest): ChannelInboundHandlerAdapter() {
+class HttpInterceptorHandler(private val remoteChannel: Channel,
+                             private val socks5Request: Socks5CommandRequest,
+                             private val followUpAction: FollowUpAction): ChannelInboundHandlerAdapter() {
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         ctx.pipeline().addLast(HttpRequestDecoder())
-        ctx.pipeline().addLast(HttpCheckHandler(remoteChannel, socks5Request))
+        ctx.pipeline().addLast(HttpCheckHandler(remoteChannel, socks5Request, followUpAction))
         super.channelActive(ctx)
     }
 
-    class HttpCheckHandler(val remoteChannel: Channel, val socks5Request: Socks5CommandRequest)
+    class HttpCheckHandler(val remoteChannel: Channel,
+                           val socks5Request: Socks5CommandRequest,
+                           val followUpAction: FollowUpAction)
         : SimpleChannelInboundHandler<HttpRequest>(), KoinComponent {
 
         val proxyConfig: ProxyRules by inject()
@@ -32,20 +34,22 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
 
                 if (httpInterceptor == null) {
                     try {
-                        ctx.pipeline().addLast(RelayHandler(remoteChannel))
-                        remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
+//                        ctx.pipeline().addLast(RelayHandler(remoteChannel))
+//                        remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+                        followUpAction.doFollowUp(ctx.channel(), remoteChannel)
                         remoteChannel.pipeline().addLast(HttpRequestEncoder())
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
 
                 } else {
-                    ctx.pipeline().addLast(MitmInitializer(remoteChannel, httpInterceptor))
+                    ctx.pipeline().addLast(MitmInitializer(remoteChannel, httpInterceptor, followUpAction))
                 }
             } else {
                 // not http, direct
-                ctx.pipeline().addLast(RelayHandler(remoteChannel))
-                remoteChannel.pipeline().addLast(RelayHandler2(ctx.channel()))
+//                ctx.pipeline().addLast(RelayHandler(remoteChannel))
+//                remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+                followUpAction.doFollowUp(ctx.channel(), remoteChannel)
             }
 
             ctx.pipeline().remove(this)
@@ -55,7 +59,8 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
 
 
     class MitmInitializer(val remoteChannel: Channel,
-                          val httpInterceptor: HttpInterceptor): ChannelInitializer<SocketChannel>() {
+                          val httpInterceptor: HttpInterceptor,
+                          val followUpAction: FollowUpAction): ChannelInitializer<SocketChannel>() {
         override fun initChannel(clientChannel: SocketChannel) {
             clientChannel.pipeline().addLast(HttpResponseEncoder())
             clientChannel.pipeline().addLast(HttpRequestDecoder())
@@ -63,13 +68,15 @@ class HttpInterceptorHandler(val remoteChannel: Channel,
 
             clientChannel.pipeline().addLast("HttpMessageHandler", HttpMessageHandler(httpInterceptor))
 
-            clientChannel.pipeline().addLast(RelayHandler(remoteChannel))
+//            clientChannel.pipeline().addLast(RelayHandler(remoteChannel))
 
             remoteChannel.pipeline().addLast(LoggingHandler())
             remoteChannel.pipeline().addLast(HttpResponseDecoder())
             remoteChannel.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
-            remoteChannel.pipeline().addLast(RelayHandler(clientChannel))
+//            remoteChannel.pipeline().addLast(RelayHandler(clientChannel))
             remoteChannel.pipeline().addLast(HttpRequestEncoder())
+
+            followUpAction.doFollowUp(clientChannel, remoteChannel)
         }
     }
 

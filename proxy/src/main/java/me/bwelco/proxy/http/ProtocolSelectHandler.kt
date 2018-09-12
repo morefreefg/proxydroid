@@ -5,26 +5,28 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ReplayingDecoder
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
+import me.bwelco.proxy.action.DirectAction
+import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.rule.ProxyRules
-import me.bwelco.proxy.upstream.RelayHandler
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class ProtocolSelectHandler(val remoteChannel: Channel, val socks5Request: Socks5CommandRequest) :
+class ProtocolSelectHandler(val remoteChannel: Channel,
+                            val socks5Request: Socks5CommandRequest,
+                            val followUpAction: FollowUpAction = DirectAction()) :
         ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT), KoinComponent {
 
-    val proxyConfig: ProxyRules by inject()
+    private val proxyConfig: ProxyRules by inject()
 
     companion object {
-        val SSL_RT_HANDSHAKE = 0x16
+        private const val SSL_RT_HANDSHAKE = 0x16
+        private const val SSL3_VERSION = 0x0300
+        private const val TLS1_1_VERSION = 0x0301
+        private const val TLS1_2_VERSION = 0x0302
+        private const val TLS1_3_VERSION = 0x0303
 
-        val SSL3_VERSION = 0x0300
-        val TLS1_1_VERSION = 0x0301
-        val TLS1_2_VERSION = 0x0302
-        val TLS1_3_VERSION = 0x0303
-
-        val SUPPORTED_TLS_VERSIONS = listOf(SSL3_VERSION, TLS1_1_VERSION, TLS1_2_VERSION, TLS1_3_VERSION)
+        private val SUPPORTED_TLS_VERSIONS = listOf(SSL3_VERSION, TLS1_1_VERSION, TLS1_2_VERSION, TLS1_3_VERSION)
     }
 
     enum class State {
@@ -49,11 +51,10 @@ class ProtocolSelectHandler(val remoteChannel: Channel, val socks5Request: Socks
                 val enableMitm = proxyConfig.mitmConfig != null
 
                 when {
-                    enableMitm && isTls -> ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request))
-                    enableMitm && !isTls -> ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request))
+                    enableMitm && isTls -> ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request, followUpAction))
+                    enableMitm && !isTls -> ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
                     !enableMitm -> {
-                        ctx.pipeline().addLast(RelayHandler(remoteChannel))
-                        remoteChannel.pipeline().addLast(RelayHandler(ctx.channel()))
+                        followUpAction.doFollowUp(ctx.channel(), remoteChannel)
                     }
                 }
 
