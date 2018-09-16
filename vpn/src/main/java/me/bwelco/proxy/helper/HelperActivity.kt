@@ -65,12 +65,12 @@ class HelperActivity : Activity() {
         try {
             val clazz = intent.getSerializableExtra(PROXY_CLASS_EXTRA) as Class<out ProxyService>? ?: return
             val intent = Intent(this, clazz)
-            intent.putExtra(ProxyService.COMMAND, ProxyService.START_COMMAND)
             ContextCompat.startForegroundService(this, intent)
+            VpnHelper.startProxyCallback?.invoke(true, null)
         } catch (e: Exception) {
             VpnHelper.startProxyCallback?.invoke(false, e)
-            VpnHelper.startProxyCallback = null
         } finally {
+            VpnHelper.startProxyCallback = null
             finish()
         }
     }
@@ -78,15 +78,13 @@ class HelperActivity : Activity() {
 
     private fun stopProxy() {
         try {
-            val clazz = intent.getSerializableExtra(PROXY_CLASS_EXTRA) as Class<out ProxyService>? ?: return
-            val intent = Intent(this, clazz)
-            intent.putExtra(ProxyService.COMMAND, ProxyService.STOP_COMMAND)
-            ContextCompat.startForegroundService(this, intent)
+            val intent = Intent(ProxyService.STOP_ACTION)
+            sendBroadcast(intent)
+            VpnHelper.stopProxyCallback?.invoke(true, null)
         } catch (e: Exception) {
             VpnHelper.stopProxyCallback?.invoke(false, e)
-            VpnHelper.stopProxyCallback = null
-
         } finally {
+            VpnHelper.stopProxyCallback = null
             finish()
         }
     }

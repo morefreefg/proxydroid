@@ -2,8 +2,10 @@ package me.bwelco.proxy
 
 import android.annotation.TargetApi
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.net.LocalSocket
 import android.net.Network
@@ -33,12 +35,17 @@ abstract class ProxyService : BaseVpnService() {
     abstract val rules: Rules
 
     companion object {
-        const val START_COMMAND = 1
-        const val STOP_COMMAND = 2
 
-        const val COMMAND = "command"
+        val STOP_ACTION = "${ProxyService::class.java}.stop_service"
 
         @JvmField var protectPath: String? = null
+    }
+
+
+    private val controlBroadcastReceiver = object: BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            stopProxy()
+        }
     }
 
     private var underlyingNetwork: Network? = null
@@ -77,20 +84,15 @@ abstract class ProxyService : BaseVpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         if (intent == null) {
-            return Service.START_STICKY
+            return Service.START_NOT_STICKY
         }
 
-        val command = intent.getIntExtra(COMMAND, -1)
-        if (command == -1) {
-            return Service.START_STICKY
-        }
+        registerReceiver(this.controlBroadcastReceiver, IntentFilter().apply {
+            addAction(STOP_ACTION)
+        })
 
-        when (command) {
-            START_COMMAND -> startProxy()
-            STOP_COMMAND -> stopProxy()
-        }
-
-        return Service.START_STICKY
+        startProxy()
+        return Service.START_NOT_STICKY
     }
 
     fun startProxy() {
@@ -116,9 +118,7 @@ abstract class ProxyService : BaseVpnService() {
                 .setMtu(VPN_MTU)
                 .addAddress(PRIVATE_VLAN.format(Locale.ENGLISH, "1"), 24)
 
-        val conn = builder.establish()
-
-        if (conn == null) return
+        val conn = builder.establish() ?: return
 
         val connectFD = conn.fd
 
@@ -138,6 +138,8 @@ abstract class ProxyService : BaseVpnService() {
 
     fun stopProxy() {
         Log.i("admin", "stop proxy")
+        unregisterReceiver(controlBroadcastReceiver)
+        processes.killAll()
         stopSelf()
     }
 
