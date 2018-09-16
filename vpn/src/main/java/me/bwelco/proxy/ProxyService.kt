@@ -157,8 +157,6 @@ abstract class ProxyService : BaseVpnService() {
                 .setContentIntent(pi)
                 .setOngoing(true)
                 .setAutoCancel(false)
-                .setContentTitle("Env Proxy")
-                .setContentText("desc")
                 .setCategory(NotificationCompat.CATEGORY_STATUS)
                 .setVisibility(NotificationCompat.VISIBILITY_SECRET)
                 .setPriority(NotificationCompat.PRIORITY_MIN)
