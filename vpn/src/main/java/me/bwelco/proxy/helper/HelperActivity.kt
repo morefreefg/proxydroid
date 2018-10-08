@@ -25,7 +25,7 @@ class HelperActivity : Activity() {
 
     private fun certBytes(): ByteArray {
         val classLoader = Thread.currentThread().contextClassLoader
-        val caCert = classLoader.getResourceAsStream("ca.crt")
+        val caCert = classLoader.getResourceAsStream("ca.pem")
 
         val length = caCert.available()
         val byteArray = ByteArray(length)

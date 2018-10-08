@@ -5,8 +5,7 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.ReferenceCountUtil
-import me.bwelco.proxy.downstream.SocksServerUtils
-import me.bwelco.proxy.util.addFutureListener
+import me.bwelco.proxy.util.closeOnFlush
 
 class RelayHandler(val relayChannel: Channel) : ChannelInboundHandlerAdapter() {
 
@@ -24,7 +23,7 @@ class RelayHandler(val relayChannel: Channel) : ChannelInboundHandlerAdapter() {
 
     override fun channelInactive(ctx: ChannelHandlerContext) {
         if (relayChannel.isActive) {
-            SocksServerUtils.closeOnFlush(relayChannel)
+            relayChannel.closeOnFlush()
         }
     }
 

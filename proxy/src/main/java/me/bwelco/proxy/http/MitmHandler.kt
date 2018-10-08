@@ -5,8 +5,8 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
-import me.bwelco.proxy.downstream.SocksServerUtils
 import me.bwelco.proxy.util.addFutureListener
+import me.bwelco.proxy.util.closeOnFlush
 
 class MitmHandler(val httpInterceptor: HttpInterceptor) : ChannelDuplexHandler() {
 
@@ -24,7 +24,7 @@ class MitmHandler(val httpInterceptor: HttpInterceptor) : ChannelDuplexHandler()
             val newResponse = httpInterceptor.onResponse(msg)
             ctx.writeAndFlush(newResponse).addFutureListener {
                 if (it.isSuccess) {
-                    SocksServerUtils.closeOnFlush(ctx.channel())
+                    ctx.channel().closeOnFlush()
                 }
             }
         } else {

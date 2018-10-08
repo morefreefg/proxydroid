@@ -9,6 +9,7 @@ import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
 import io.netty.handler.codec.socksx.v4.Socks4CommandType
 import io.netty.handler.codec.socksx.v5.*
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
+import me.bwelco.proxy.util.closeOnFlush
 
 @ChannelHandler.Sharable
 class SocksServerHandler(val upstreamMatchHandler: UpstreamMatchHandler) : SimpleChannelInboundHandler<SocksMessage>() {
@@ -59,7 +60,7 @@ class SocksServerHandler(val upstreamMatchHandler: UpstreamMatchHandler) : Simpl
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
-        SocksServerUtils.closeOnFlush(ctx.channel())
+        ctx.channel().closeOnFlush()
     }
 
     companion object {

@@ -1,17 +1,13 @@
 package me.bwelco.proxy
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import io.netty.handler.codec.http.FullHttpRequest
-import io.netty.handler.codec.http.FullHttpResponse
 import me.bwelco.proxy.rule.Rules
 import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.downstream.SocksServerInitializer
-import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
 import me.bwelco.proxy.rule.DefaultRules
 import org.koin.dsl.module.Module

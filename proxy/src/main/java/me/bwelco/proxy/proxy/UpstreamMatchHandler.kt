@@ -11,10 +11,10 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.rule.ProxyRules
-import me.bwelco.proxy.downstream.SocksServerUtils
 import me.bwelco.proxy.http.ProtocolSelectHandler
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.Upstream
+import me.bwelco.proxy.util.closeOnFlush
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
@@ -50,7 +50,7 @@ class UpstreamMatchHandler :
                     } else {
                         clientCtx.channel().writeAndFlush(
                                 DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, message.dstAddrType()))
-                        SocksServerUtils.closeOnFlush(clientCtx.channel())
+                        clientCtx.channel().closeOnFlush()
                     }
                 }
 
@@ -72,7 +72,7 @@ class UpstreamMatchHandler :
     }
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        SocksServerUtils.closeOnFlush(ctx.channel())
+        ctx.channel().closeOnFlush()
     }
 
 }
