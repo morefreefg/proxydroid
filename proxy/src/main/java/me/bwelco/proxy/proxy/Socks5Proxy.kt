@@ -5,7 +5,6 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.upstream.Socks5Upstream
 import me.bwelco.proxy.upstream.Upstream
-import java.net.Inet4Address
 import java.net.InetAddress
 
 class Socks5Proxy(val address: InetAddress,

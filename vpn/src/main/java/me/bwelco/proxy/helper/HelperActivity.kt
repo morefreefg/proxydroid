@@ -63,7 +63,8 @@ class HelperActivity : Activity() {
 
     private fun startProxy() {
         try {
-            val clazz = intent.getSerializableExtra(PROXY_CLASS_EXTRA) as Class<out ProxyService>? ?: return
+            val clazz = intent.getSerializableExtra(PROXY_CLASS_EXTRA) as Class<out ProxyService>?
+                    ?: return
             val intent = Intent(this, clazz)
             ContextCompat.startForegroundService(this, intent)
             VpnHelper.startProxyCallback?.invoke(true, null)
@@ -103,7 +104,7 @@ class HelperActivity : Activity() {
                 }
             }
         } else {
-            when(requestCode)  {
+            when (requestCode) {
                 REQUEST_INSTALL_CA -> {
                     VpnHelper.installCaCallBack?.invoke(false, null)
                     VpnHelper.installCaCallBack = null

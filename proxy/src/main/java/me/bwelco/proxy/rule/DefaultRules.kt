@@ -4,7 +4,7 @@ import me.bwelco.proxy.http.HttpInterceptor
 import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.Proxy
 
-class DefaultRules: Rules {
+class DefaultRules : Rules {
 
     override val proxylist: Map<String, Proxy> = mapOf()
 

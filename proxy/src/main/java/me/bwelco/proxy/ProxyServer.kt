@@ -5,11 +5,11 @@ import io.netty.channel.Channel
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import me.bwelco.proxy.rule.Rules
-import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.downstream.SocksServerInitializer
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
 import me.bwelco.proxy.rule.DefaultRules
+import me.bwelco.proxy.rule.ProxyRules
+import me.bwelco.proxy.rule.Rules
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.applicationContext
 import org.koin.standalone.StandAloneContext.closeKoin

@@ -38,11 +38,12 @@ abstract class ProxyService : BaseVpnService() {
 
         val STOP_ACTION = "${ProxyService::class.java}.stop_service"
 
-        @JvmField var protectPath: String? = null
+        @JvmField
+        var protectPath: String? = null
     }
 
 
-    private val controlBroadcastReceiver = object: BroadcastReceiver() {
+    private val controlBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             stopProxy()
         }

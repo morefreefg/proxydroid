@@ -12,7 +12,7 @@ import org.koin.standalone.inject
 
 class HttpInterceptorHandler(private val remoteChannel: Channel,
                              private val socks5Request: Socks5CommandRequest,
-                             private val followUpAction: FollowUpAction): ChannelInboundHandlerAdapter() {
+                             private val followUpAction: FollowUpAction) : ChannelInboundHandlerAdapter() {
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         ctx.pipeline().addLast(HttpRequestDecoder())
@@ -60,7 +60,7 @@ class HttpInterceptorHandler(private val remoteChannel: Channel,
 
     class MitmInitializer(val remoteChannel: Channel,
                           val httpInterceptor: HttpInterceptor,
-                          val followUpAction: FollowUpAction): ChannelInitializer<SocketChannel>() {
+                          val followUpAction: FollowUpAction) : ChannelInitializer<SocketChannel>() {
         override fun initChannel(clientChannel: SocketChannel) {
             clientChannel.pipeline().addLast(HttpResponseEncoder())
             clientChannel.pipeline().addLast(HttpRequestDecoder())
@@ -81,7 +81,7 @@ class HttpInterceptorHandler(private val remoteChannel: Channel,
     }
 
 
-    class HttpMessageHandler(val httpInterceptor: HttpInterceptor): ChannelInboundHandlerAdapter() {
+    class HttpMessageHandler(val httpInterceptor: HttpInterceptor) : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
             if (msg is FullHttpRequest) {
                 ctx.pipeline().addAfter("HttpMessageHandler", "MitmHandler", MitmHandler(httpInterceptor))

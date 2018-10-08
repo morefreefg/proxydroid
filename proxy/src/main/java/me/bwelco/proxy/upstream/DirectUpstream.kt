@@ -9,7 +9,6 @@ import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
-import java.rmi.Remote
 
 class DirectUpstream(val request: Socks5CommandRequest,
                      val promise: Promise<Channel>) : Upstream(request, promise) {

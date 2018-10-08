@@ -5,18 +5,6 @@ import android.net.LocalSocketAddress;
 import android.text.TextUtils;
 import android.util.Log;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
-import io.netty.channel.nio.AbstractNioByteChannel;
-import io.netty.channel.socket.DefaultSocketChannelConfig;
-import io.netty.channel.socket.ServerSocketChannel;
-import io.netty.channel.socket.SocketChannelConfig;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.concurrent.GlobalEventExecutor;
-import io.netty.util.internal.PlatformDependent;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +17,25 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.concurrent.Executor;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelException;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOutboundBuffer;
+import io.netty.channel.ChannelPromise;
+import io.netty.channel.EventLoop;
+import io.netty.channel.FileRegion;
+import io.netty.channel.RecvByteBufAllocator;
+import io.netty.channel.nio.AbstractNioByteChannel;
+import io.netty.channel.socket.DefaultSocketChannelConfig;
+import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannelConfig;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty.util.internal.PlatformDependent;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class CustomNioSocketChannel extends AbstractNioByteChannel implements io.netty.channel.socket.SocketChannel {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioSocketChannel.class);
@@ -89,7 +96,7 @@ public class CustomNioSocketChannel extends AbstractNioByteChannel implements io
     /**
      * Create howLong new instance
      *
-     * @param parent the {@link Channel} which created this instance or {@code null} if it was created by the user
+     * @param parent        the {@link Channel} which created this instance or {@code null} if it was created by the user
      * @param socketChannel the {@link SocketChannel} which will be used
      */
     public CustomNioSocketChannel(Channel parent, SocketChannel socketChannel) {

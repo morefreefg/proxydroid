@@ -1,14 +1,13 @@
 package me.bwelco.demo
 
 import me.bwelco.proxy.http.HttpInterceptor
-import me.bwelco.proxy.rule.Rules
 import me.bwelco.proxy.http.HttpInterceptorMatcher
 import me.bwelco.proxy.proxy.HttpProxy
-import me.bwelco.proxy.proxy.Proxy
 import me.bwelco.proxy.proxy.Socks5Proxy
+import me.bwelco.proxy.rule.Rules
 import java.net.Inet4Address
 
-class CustomRules: Rules {
+class CustomRules : Rules {
 
     override val mitmConfig: HttpInterceptorMatcher? = object : HttpInterceptorMatcher {
         override fun match(host: String): HttpInterceptor? {

@@ -9,7 +9,7 @@ import java.net.InetAddress
 
 
 class HttpProxy(val address: InetAddress,
-                val port: Int): Proxy() {
+                val port: Int) : Proxy() {
 
     override fun createProxyHandler(request: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
         return HttpUpstream(request, promise, address, port)

@@ -10,8 +10,8 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
-import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.http.ProtocolSelectHandler
+import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.upstream.DirectUpstream
 import me.bwelco.proxy.upstream.Upstream
 import me.bwelco.proxy.util.closeOnFlush

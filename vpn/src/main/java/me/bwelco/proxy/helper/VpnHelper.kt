@@ -13,7 +13,7 @@ object VpnHelper {
     internal var startProxyCallback: ((result: Boolean, throwable: Throwable?) -> Unit)? = null
     fun startProxy(context: Context,
                    proxyClass: Class<out ProxyService>,
-                   callBack: (result: Boolean, throwable: Throwable?) -> Unit = {_,_ -> }) {
+                   callBack: (result: Boolean, throwable: Throwable?) -> Unit = { _, _ -> }) {
         if (startProxyCallback != null) return callBack(false, Throwable("starting...."))
         startProxyCallback = callBack
 
@@ -27,7 +27,7 @@ object VpnHelper {
     internal var stopProxyCallback: ((result: Boolean, throwable: Throwable?) -> Unit)? = null
     fun stopProxy(context: Context,
                   proxyClass: Class<out ProxyService>,
-                  callBack: (result: Boolean, throwable: Throwable?) -> Unit = {_,_ -> }) {
+                  callBack: (result: Boolean, throwable: Throwable?) -> Unit = { _, _ -> }) {
         if (stopProxyCallback != null) return callBack(false, Throwable("stopping...."))
         stopProxyCallback = callBack
 
@@ -41,7 +41,7 @@ object VpnHelper {
     internal var installCaCallBack: ((result: Boolean, throwable: Throwable?) -> Unit)? = null
 
     fun installCA(context: Context,
-                  callBack: (result: Boolean, throwable: Throwable?) -> Unit = {_,_ -> }) {
+                  callBack: (result: Boolean, throwable: Throwable?) -> Unit = { _, _ -> }) {
         if (installCaCallBack != null) return callBack(false, Throwable("installing...."))
         installCaCallBack = callBack
 

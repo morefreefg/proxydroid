@@ -57,8 +57,10 @@ class GuardedProcessPool {
                 thread("StreamLogger-$cmdName") {
                     try {
                         input.bufferedReader().useLines { it.forEach { logger(TAG, it) } }
-                    } catch (_: IOException) { }    // ignore
+                    } catch (_: IOException) {
+                    }    // ignore
                 }
+
         private fun pushException(ioException: IOException?) {
             if (pushed) return
             excQueue.put(ioException ?: dummy)
@@ -133,7 +135,8 @@ class GuardedProcessPool {
             guardThreads.forEach { it.interrupt() }
             try {
                 guardThreads.forEach { it.join() }
-            } catch (_: InterruptedException) { }
+            } catch (_: InterruptedException) {
+            }
         }
     }
 }
