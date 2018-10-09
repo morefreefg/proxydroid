@@ -28,6 +28,12 @@ object CertUtil {
     /**
      * How to generate ssl certificate
      * https://aboutssl.org/how-to-create-and-import-self-signed-certificate-to-android-device/
+     *
+     * echo basicConstraints=CA:true > android_options.txt
+     * openssl genrsa -out ca_private.key 2048
+     * openssl req -new -days 3650 -key ca_private.key -out ca.pem
+     * openssl x509 -req -days 3650 -in ca.pem -signkey ca_private.key -extfile ./android_options.txt -out ca.crt
+     * openssl pkcs8 -topk8 -nocrypt -inform PEM -outform DER -in ca_private.key -out ca_private.der
      */
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -102,7 +108,7 @@ object CertUtil {
                 caNotAfter: Date, serverPubKey: PublicKey,
                 vararg hosts: String): X509Certificate {
 
-        val subject = "C=CN, ST=Zhejiang, L=Hangzhou, O=Youzan, OU=mobile, CN=" + hosts[0]
+        val subject = "C=CN, ST=zhejiang, L=hangzhou, O=youzan, OU=mobile, CN=" + hosts[0]
         val generalNames = hosts.map { GeneralName(GeneralName.dNSName, it) }.toTypedArray()
 
         val certHolder = JcaX509v3CertificateBuilder(X500Name(issuer),

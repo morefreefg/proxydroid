@@ -30,18 +30,19 @@ class SniHandler(private val remoteChannel: Channel,
             val downStreamTlsHandler = SslContextBuilder
                     .forServer(SSLFactory.certConfig.serverPrivateKey,
                             SSLFactory.newCert(hostname))
-                    .build().newHandler(ctx.alloc())
+                    .build()
+                    .newHandler(ctx.alloc())
 
             val upstreamTlsHandler = SslContextBuilder.forClient().build().newHandler(remoteChannel.alloc())
 
             // downstream
             ctx.pipeline().replace(this, "downStreamTlshandler", downStreamTlsHandler)
             remoteChannel.pipeline().addFirst("upstreamTlsHandler", upstreamTlsHandler)
-
             ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
-            ctx.pipeline().fireChannelActive()
-            remoteChannel.pipeline().fireChannelActive()
         }
+
+        ctx.pipeline().fireChannelActive()
+        remoteChannel.pipeline().fireChannelActive()
     }
 
     override fun lookup(ctx: ChannelHandlerContext, hostname: String): Future<String> {

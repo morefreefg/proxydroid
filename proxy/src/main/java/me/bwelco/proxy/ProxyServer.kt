@@ -7,6 +7,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
 import me.bwelco.proxy.downstream.SocksServerInitializer
 import me.bwelco.proxy.proxy.UpstreamMatchHandler
+import me.bwelco.proxy.rule.CustomRules
 import me.bwelco.proxy.rule.DefaultRules
 import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.rule.Rules
@@ -16,7 +17,7 @@ import org.koin.standalone.StandAloneContext.closeKoin
 import org.koin.standalone.StandAloneContext.startKoin
 
 fun main(args: Array<String>) {
-    ProxyServer.start()
+    ProxyServer.start(rules = CustomRules())
 }
 
 object ProxyServer {
