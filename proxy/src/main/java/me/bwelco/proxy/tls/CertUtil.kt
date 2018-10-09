@@ -25,6 +25,10 @@ import java.util.*
 
 object CertUtil {
 
+    /**
+     * How to generate ssl certificate
+     * https://aboutssl.org/how-to-create-and-import-self-signed-certificate-to-android-device/
+     */
     init {
         Security.addProvider(BouncyCastleProvider())
     }
