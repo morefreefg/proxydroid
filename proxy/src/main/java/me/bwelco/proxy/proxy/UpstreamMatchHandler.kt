@@ -7,15 +7,14 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.socksx.SocksMessage
 import io.netty.handler.codec.socksx.v4.Socks4CommandRequest
 import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
+import io.netty.handler.codec.socksx.v5.Socks5AddressType
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.action.DirectAction
-import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.http.ProtocolSelectHandler
 import me.bwelco.proxy.rule.ProxyRules
-import me.bwelco.proxy.upstream.DirectUpstreamHandler
-import me.bwelco.proxy.upstream.UpstreamHandler
+import me.bwelco.proxy.upstream.RuleUpstreamHandler
 import me.bwelco.proxy.util.closeOnFlush
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -26,35 +25,32 @@ class UpstreamMatchHandler :
 
     private val proxyConfig: ProxyRules by inject()
 
-    private fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): UpstreamHandler {
-        return proxyConfig.proxylist[proxyConfig.proxyMatcher(message.dstAddr())]
-                ?.createProxyHandler(message, promise)
-                ?: DirectUpstreamHandler(message, promise)
-    }
+    override fun channelRead0(clientCtx: ChannelHandlerContext, request: SocksMessage) {
 
-    override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {
-
-        when (message) {
+        when (request) {
             is Socks5CommandRequest -> {
 
-                val commandResponsePromise: Promise<Channel> = clientCtx.executor().newPromise()
-                commandResponsePromise.addListener { future ->
+                val upstreamPromise: Promise<Channel> = clientCtx.executor().newPromise()
+
+                upstreamPromise.addListener { future ->
                     if (future.isSuccess) {
                         clientCtx.writeAndFlush(DefaultSocks5CommandResponse(
                                 Socks5CommandStatus.SUCCESS,
-                                message.dstAddrType(),
-                                message.dstAddr(),
-                                message.dstPort()))
+                                request.dstAddrType(),
+                                request.dstAddr(),
+                                request.dstPort()))
                     } else {
                         clientCtx.channel().writeAndFlush(
-                                DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, message.dstAddrType()))
+                                DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, request.dstAddrType()))
                         clientCtx.channel().closeOnFlush()
                     }
                 }
 
                 clientCtx.pipeline().remove(this)
 
-                clientCtx.pipeline().addLast(matchUpstream(message, commandResponsePromise.addListener {
+                val dstAddrType = request.dstAddrType()
+
+                val socks5UrlTypePromise = upstreamPromise.addListener {
                     if (it.isSuccess) {
                         val remoteChannel = it.now as Channel
 
@@ -62,12 +58,22 @@ class UpstreamMatchHandler :
                                 .pipeline()
                                 .addLast(ProtocolSelectHandler(
                                         remoteChannel = remoteChannel,
-                                        socks5Request = message,
+                                        socks5Request = request,
                                         followUpAction = proxyConfig.proxylist
-                                                [proxyConfig.proxyMatcher(message.dstAddr())]?.followUpAction()
+                                                [proxyConfig.proxyMatcher(request.dstAddr())]?.followUpAction()
                                                 ?: DirectAction()))
                     }
-                }))
+                }
+
+                val upstreamHandler = proxyConfig
+                        .proxylist[proxyConfig.proxyMatcher(request.dstAddr())]?.createProxyHandler(request, upstreamPromise)
+                        ?: when {
+                            dstAddrType.equals(Socks5AddressType.IPv4)
+                                    || dstAddrType.equals(Socks5AddressType.IPv6) -> RuleUpstreamHandler(request, upstreamPromise)
+                            else -> DirectProxy().createProxyHandler(request, socks5UrlTypePromise)
+                        }
+
+                clientCtx.pipeline().addLast(upstreamHandler)
 
                 clientCtx.pipeline().fireChannelRegistered()
                 clientCtx.pipeline().fireChannelActive()
