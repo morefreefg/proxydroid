@@ -7,10 +7,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.util.ReferenceCountUtil
 import me.bwelco.proxy.util.closeOnFlush
 
-class RelayHandler(val relayChannel: Channel) : ChannelInboundHandlerAdapter() {
+class RelayHandler(private val relayChannel: Channel) : ChannelInboundHandlerAdapter() {
 
     override fun channelActive(ctx: ChannelHandlerContext) {
-        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)
+//        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER)
     }
 
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {

@@ -9,6 +9,7 @@ import io.netty.util.concurrent.Future
 import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.tls.SSLFactory
+import me.bwelco.proxy.upstream.RelayHandler
 import me.bwelco.proxy.util.isEmpty
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -26,6 +27,7 @@ class SniHandler(private val remoteChannel: Channel,
 
         if (httpInterceptor == null) {
             followUpAction.doFollowUp(ctx.channel(), remoteChannel)
+            ctx.pipeline().remove(this)
         } else {
             val downStreamTlsHandler = SslContextBuilder
                     .forServer(SSLFactory.certConfig.serverPrivateKey,
