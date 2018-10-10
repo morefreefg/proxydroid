@@ -103,7 +103,7 @@ abstract class ProxyService : BaseVpnService() {
         worker.start()
 
         Thread {
-            ProxyServer.start(1080, CustomNioSocketChannel::class.java, rules)
+            ProxyServer.startUp(1080, CustomNioSocketChannel::class.java, rules)
         }.start()
 
         startForeground(1, getNotification())
@@ -141,6 +141,7 @@ abstract class ProxyService : BaseVpnService() {
         Log.i("admin", "stop proxy")
         unregisterReceiver(controlBroadcastReceiver)
         processes.killAll()
+        ProxyServer.shutdown()
         stopSelf()
     }
 

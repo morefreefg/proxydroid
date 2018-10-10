@@ -12,13 +12,7 @@
         <activity android:name="me.bwelco.demo.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-
-                <data
-                    android:host="setting"
-                    android:path="/settingPage"
-                    android:scheme="proxy" />
             </intent-filter>
         </activity>
 
