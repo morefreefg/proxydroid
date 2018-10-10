@@ -12,9 +12,6 @@ object SSLFactory {
     data class CertificateConfig(
             //读取CA证书使用者信息
             val iUser: String,
-            //读取CA证书有效时段(server证书有效期超出CA证书的，在手机上会提示证书不安全)
-            val caNotBefore: Date,
-            val caNotAfter: Date,
             //CA私钥用于给动态生成的网站SSL证书签证
             val caPriKey: PrivateKey,
             //生产一对随机公私钥用于网站SSL证书动态创建
@@ -28,8 +25,6 @@ object SSLFactory {
 
         return certCache.get(key) ?: CertUtil.genCert(certConfig.iUser,
                 certConfig.caPriKey,
-                certConfig.caNotBefore,
-                certConfig.caNotAfter,
                 certConfig.serverPublicKey,
                 key).apply { certCache.put(key, this) }
     }
@@ -43,8 +38,6 @@ object SSLFactory {
 
 
         certConfig = CertificateConfig(iUser = CertUtil.getSubject(caCert),
-                caNotBefore = caCert.notBefore,
-                caNotAfter = caCert.notAfter,
                 caPriKey = caPriKey,
                 serverPrivateKey = keyPair.getPrivate(),
                 serverPublicKey = keyPair.getPublic())

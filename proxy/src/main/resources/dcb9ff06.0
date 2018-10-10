@@ -1,0 +1,51 @@
+-----BEGIN CERTIFICATE-----
+MIICWjCCAcOgAwIBAgIJAOyTmuViSz//MA0GCSqGSIb3DQEBBQUAMGYxCzAJBgNV
+BAYTAkNOMREwDwYDVQQIDAh6aGVqaWFuZzERMA8GA1UEBwwIaGFuZ3pob3UxDzAN
+BgNVBAoMBnlvdXphbjEPMA0GA1UECwwGeW91emFuMQ8wDQYDVQQDDAZ5b3V6YW4w
+HhcNMTgxMDEwMDY1NjM0WhcNNDgwMTA2MDY1NjM0WjBmMQswCQYDVQQGEwJDTjER
+MA8GA1UECAwIemhlamlhbmcxETAPBgNVBAcMCGhhbmd6aG91MQ8wDQYDVQQKDAZ5
+b3V6YW4xDzANBgNVBAsMBnlvdXphbjEPMA0GA1UEAwwGeW91emFuMIGfMA0GCSqG
+SIb3DQEBAQUAA4GNADCBiQKBgQDhJH4SocFphO4bOAR32z6OQ/3jwhUrRmOyusft
+yijukjAjEJNX6HiT1UrgQjL0wLJPrUQugxiEwOHHgH9erQ890dXbQfgrAIF2pTfs
+ZypcARrQr6MErxLOEQldavaSVzyvdfZwEtX8Vi3rR3ezWquqy2wi0LOhP9jVJY2c
+LVQqmQIDAQABoxAwDjAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAKRy
+t/qjgEEcrv1wbWvboldz8mp49iET3eWQ+m1s5InLebswpITZpIX85rslWR3YTNkW
+8587+P1Sw6crz9D8xtVUIw8DXZ+r4jVEst1nCciGLPaerdQsG0sPddTnyJHJBU2y
+ulyHKbMcAaRTJA7zjNveQg0PvdQhxVnhOEdVq+sc
+-----END CERTIFICATE-----
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 17047139324514746367 (0xec939ae5624b3fff)
+    Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=CN, ST=zhejiang, L=hangzhou, O=youzan, OU=youzan, CN=youzan
+        Validity
+            Not Before: Oct 10 06:56:34 2018 GMT
+            Not After : Jan  6 06:56:34 2048 GMT
+        Subject: C=CN, ST=zhejiang, L=hangzhou, O=youzan, OU=youzan, CN=youzan
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:e1:24:7e:12:a1:c1:69:84:ee:1b:38:04:77:db:
+                    3e:8e:43:fd:e3:c2:15:2b:46:63:b2:ba:c7:ed:ca:
+                    28:ee:92:30:23:10:93:57:e8:78:93:d5:4a:e0:42:
+                    32:f4:c0:b2:4f:ad:44:2e:83:18:84:c0:e1:c7:80:
+                    7f:5e:ad:0f:3d:d1:d5:db:41:f8:2b:00:81:76:a5:
+                    37:ec:67:2a:5c:01:1a:d0:af:a3:04:af:12:ce:11:
+                    09:5d:6a:f6:92:57:3c:af:75:f6:70:12:d5:fc:56:
+                    2d:eb:47:77:b3:5a:ab:aa:cb:6c:22:d0:b3:a1:3f:
+                    d8:d5:25:8d:9c:2d:54:2a:99
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: 
+                CA:TRUE
+    Signature Algorithm: sha1WithRSAEncryption
+         a4:72:b7:fa:a3:80:41:1c:ae:fd:70:6d:6b:db:a2:57:73:f2:
+         6a:78:f6:21:13:dd:e5:90:fa:6d:6c:e4:89:cb:79:bb:30:a4:
+         84:d9:a4:85:fc:e6:bb:25:59:1d:d8:4c:d9:16:f3:9f:3b:f8:
+         fd:52:c3:a7:2b:cf:d0:fc:c6:d5:54:23:0f:03:5d:9f:ab:e2:
+         35:44:b2:dd:67:09:c8:86:2c:f6:9e:ad:d4:2c:1b:4b:0f:75:
+         d4:e7:c8:91:c9:05:4d:b2:ba:5c:87:29:b3:1c:01:a4:53:24:
+         0e:f3:8c:db:de:42:0d:0f:bd:d4:21:c5:59:e1:38:47:55:ab:
+         eb:1c

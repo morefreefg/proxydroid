@@ -30,10 +30,23 @@ object CertUtil {
      * https://aboutssl.org/how-to-create-and-import-self-signed-certificate-to-android-device/
      *
      * echo basicConstraints=CA:true > android_options.txt
-     * openssl genrsa -out ca_private.key 2048
-     * openssl req -new -days 3650 -key ca_private.key -out ca.pem
-     * openssl x509 -req -days 3650 -in ca.pem -signkey ca_private.key -extfile ./android_options.txt -out ca.crt
+     * openssl genrsa -out ca_private.key 1024
+     * openssl req -new -days 10680 -key ca_private.key -out ca.pem
+     * openssl x509 -req -days 10680 -in ca.pem -signkey ca_private.key -extfile ./android_options.txt -out ca.crt
      * openssl pkcs8 -topk8 -nocrypt -inform PEM -outform DER -in ca_private.key -out ca_private.der
+     *
+     * generate android system ca
+     * openssl x509 -inform PEM -subject_hash_old -in ca.crt | head -1
+     * cat ca.crt > ${hash}.0
+     * openssl x509 -inform PEM -text -in ca.crt -out /dev/null >> ${hash}.0
+     *
+     * adb push ${hash}.0 /sdcard
+     * adb shell
+     * mount -o remount,rw /system
+     * su
+     * cp -rf /sdacard/${hash}.0 /system/etc/security/cacerts/
+     * chmod 644 /system/etc/security/cacerts/${hash}.0
+     * reboot
      */
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -104,17 +117,20 @@ object CertUtil {
     }
 
     @Throws(Exception::class)
-    fun genCert(issuer: String, caPriKey: PrivateKey, caNotBefore: Date,
-                caNotAfter: Date, serverPubKey: PublicKey,
+    fun genCert(issuer: String, caPriKey: PrivateKey, serverPubKey: PublicKey,
                 vararg hosts: String): X509Certificate {
 
-        val subject = "C=CN, ST=zhejiang, L=hangzhou, O=youzan, OU=mobile, CN=" + hosts[0]
+        val subject = "C=CN, ST=zhejiang, L=hangzhou, O=youzan, OU=youzan, CN=" + hosts[0]
         val generalNames = hosts.map { GeneralName(GeneralName.dNSName, it) }.toTypedArray()
+
+        val notBefore = Date()
+        @Suppress("INTEGER_OVERFLOW")
+        val norAfter = Date(notBefore.time + (12 * 30 * 24 * 60 * 60 * 1000).toLong())
 
         val certHolder = JcaX509v3CertificateBuilder(X500Name(issuer),
                 BigInteger.valueOf(System.currentTimeMillis() + (Math.random() * 10000).toLong() + 1000),
-                caNotBefore,
-                caNotAfter,
+                notBefore,
+                norAfter,
                 X500Name(subject),
                 serverPubKey)
                 .addExtension(Extension.subjectAlternativeName, false, GeneralNames(generalNames))
