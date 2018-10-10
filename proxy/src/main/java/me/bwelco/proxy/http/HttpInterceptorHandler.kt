@@ -20,9 +20,9 @@ class HttpInterceptorHandler(private val remoteChannel: Channel,
         super.channelActive(ctx)
     }
 
-    class HttpCheckHandler(val remoteChannel: Channel,
-                           val socks5Request: Socks5CommandRequest,
-                           val followUpAction: FollowUpAction)
+    class HttpCheckHandler(private val remoteChannel: Channel,
+                           private val socks5Request: Socks5CommandRequest,
+                           private val followUpAction: FollowUpAction)
         : SimpleChannelInboundHandler<HttpRequest>(), KoinComponent {
 
         val proxyConfig: ProxyRules by inject()
@@ -58,9 +58,9 @@ class HttpInterceptorHandler(private val remoteChannel: Channel,
     }
 
 
-    class MitmInitializer(val remoteChannel: Channel,
-                          val httpInterceptor: HttpInterceptor,
-                          val followUpAction: FollowUpAction) : ChannelInitializer<SocketChannel>() {
+    class MitmInitializer(private val remoteChannel: Channel,
+                          private val httpInterceptor: HttpInterceptor,
+                          private val followUpAction: FollowUpAction) : ChannelInitializer<SocketChannel>() {
         override fun initChannel(clientChannel: SocketChannel) {
             clientChannel.pipeline().addLast(HttpResponseEncoder())
             clientChannel.pipeline().addLast(HttpRequestDecoder())

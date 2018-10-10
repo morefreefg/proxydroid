@@ -10,5 +10,5 @@ import org.koin.standalone.KoinComponent
  * request: upstream socks request
  * promise: when set promise success, will start to direct downstream to upstream
  */
-abstract class Upstream(request: Socks5CommandRequest,
-                        promise: Promise<Channel>) : ChannelInboundHandlerAdapter(), KoinComponent
+abstract class UpstreamHandler(request: Socks5CommandRequest,
+                               promise: Promise<Channel>) : ChannelInboundHandlerAdapter(), KoinComponent

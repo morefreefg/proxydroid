@@ -12,9 +12,9 @@ import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class ProtocolSelectHandler(val remoteChannel: Channel,
-                            val socks5Request: Socks5CommandRequest,
-                            val followUpAction: FollowUpAction = DirectAction()) :
+class ProtocolSelectHandler(private val remoteChannel: Channel,
+                            private val socks5Request: Socks5CommandRequest,
+                            private val followUpAction: FollowUpAction = DirectAction()) :
         ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT), KoinComponent {
 
     private val proxyConfig: ProxyRules by inject()
@@ -53,9 +53,7 @@ class ProtocolSelectHandler(val remoteChannel: Channel,
                 when {
                     enableMitm && isTls -> ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request, followUpAction))
                     enableMitm && !isTls -> ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
-                    !enableMitm -> {
-                        followUpAction.doFollowUp(ctx.channel(), remoteChannel)
-                    }
+                    !enableMitm -> followUpAction.doFollowUp(ctx.channel(), remoteChannel)
                 }
 
                 ctx.pipeline().fireChannelActive()

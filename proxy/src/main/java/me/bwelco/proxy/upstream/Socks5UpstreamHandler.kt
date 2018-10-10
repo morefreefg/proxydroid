@@ -10,10 +10,10 @@ import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
 import java.net.InetAddress
 
-class Socks5Upstream(val request: Socks5CommandRequest,
-                     val promise: Promise<Channel>,
-                     val remoteSocks5Server: InetAddress,
-                     val remoteSocks5ServerPort: Int) : Upstream(request, promise) {
+class Socks5UpstreamHandler(val request: Socks5CommandRequest,
+                            val promise: Promise<Channel>,
+                            val remoteSocks5Server: InetAddress,
+                            val remoteSocks5ServerPort: Int) : UpstreamHandler(request, promise) {
 
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 

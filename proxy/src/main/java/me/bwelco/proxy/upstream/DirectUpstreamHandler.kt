@@ -10,8 +10,8 @@ import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
 
-class DirectUpstream(val request: Socks5CommandRequest,
-                     val promise: Promise<Channel>) : Upstream(request, promise) {
+class DirectUpstreamHandler(val request: Socks5CommandRequest,
+                            val promise: Promise<Channel>) : UpstreamHandler(request, promise) {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext

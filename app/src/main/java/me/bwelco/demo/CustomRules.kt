@@ -19,7 +19,7 @@ class CustomRules : Rules {
     }
 
     override val proxylist =
-            mutableMapOf("socks" to Socks5Proxy(Inet4Address.getByName("172.17.13.68"), 6153),
+            mutableMapOf("socks" to Socks5Proxy(Inet4Address.getByName("172.17.13.18"), 6153),
                     "http" to HttpProxy(Inet4Address.getByName("172.17.13.68"), 8888))
 
     override fun proxyMatcher(host: String): String {
@@ -27,6 +27,6 @@ class CustomRules : Rules {
 //            host.contains("baidu") -> "http"
 //            else -> "http"
 //        }
-        return "DIRECT"
+        return "socks"
     }
 }

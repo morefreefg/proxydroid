@@ -10,10 +10,12 @@ import io.netty.handler.codec.socksx.v5.DefaultSocks5CommandResponse
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import io.netty.handler.codec.socksx.v5.Socks5CommandStatus
 import io.netty.util.concurrent.Promise
+import me.bwelco.proxy.action.DirectAction
+import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.http.ProtocolSelectHandler
 import me.bwelco.proxy.rule.ProxyRules
-import me.bwelco.proxy.upstream.DirectUpstream
-import me.bwelco.proxy.upstream.Upstream
+import me.bwelco.proxy.upstream.DirectUpstreamHandler
+import me.bwelco.proxy.upstream.UpstreamHandler
 import me.bwelco.proxy.util.closeOnFlush
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -24,14 +26,10 @@ class UpstreamMatchHandler :
 
     private val proxyConfig: ProxyRules by inject()
 
-    private fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): Upstream {
+    private fun matchUpstream(message: Socks5CommandRequest, promise: Promise<Channel>): UpstreamHandler {
         return proxyConfig.proxylist[proxyConfig.proxyMatcher(message.dstAddr())]
                 ?.createProxyHandler(message, promise)
-                ?: DirectUpstream(message, promise)
-    }
-
-    private fun doFollowUp(clientChannel: Channel, remoteChannel: Channel, commandRequest: Socks5CommandRequest) {
-        clientChannel.pipeline().addLast(ProtocolSelectHandler(remoteChannel, commandRequest))
+                ?: DirectUpstreamHandler(message, promise)
     }
 
     override fun channelRead0(clientCtx: ChannelHandlerContext, message: SocksMessage) {
@@ -55,10 +53,19 @@ class UpstreamMatchHandler :
                 }
 
                 clientCtx.pipeline().remove(this)
+
                 clientCtx.pipeline().addLast(matchUpstream(message, commandResponsePromise.addListener {
                     if (it.isSuccess) {
                         val remoteChannel = it.now as Channel
-                        doFollowUp(clientCtx.channel(), remoteChannel, message)
+
+                        clientCtx.channel()
+                                .pipeline()
+                                .addLast(ProtocolSelectHandler(
+                                        remoteChannel = remoteChannel,
+                                        socks5Request = message,
+                                        followUpAction = proxyConfig.proxylist
+                                                [proxyConfig.proxyMatcher(message.dstAddr())]?.followUpAction()
+                                                ?: DirectAction()))
                     }
                 }))
 

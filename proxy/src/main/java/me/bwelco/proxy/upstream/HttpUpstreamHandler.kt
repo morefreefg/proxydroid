@@ -13,12 +13,12 @@ import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
 import java.net.InetAddress
 
-class HttpUpstream(val request: Socks5CommandRequest,
-                   val promise: Promise<Channel>,
-                   val remoteProxyServer: InetAddress,
-                   val remoteProxyPort: Int) : Upstream(request, promise) {
+class HttpUpstreamHandler(request: Socks5CommandRequest,
+                          private val promise: Promise<Channel>,
+                          private val remoteProxyServer: InetAddress,
+                          private val remoteProxyPort: Int) : UpstreamHandler(request, promise) {
 
-    val bootstrap: Bootstrap by lazy { Bootstrap() }
+    private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 
