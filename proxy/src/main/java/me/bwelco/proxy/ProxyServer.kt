@@ -1,7 +1,10 @@
 package me.bwelco.proxy
 
+import io.netty.bootstrap.Bootstrap
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
@@ -12,6 +15,7 @@ import me.bwelco.proxy.rule.CustomRules
 import me.bwelco.proxy.rule.DefaultRules
 import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.rule.Rules
+import me.bwelco.proxy.util.addFutureListener
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.applicationContext
 import org.koin.error.AlreadyStartedException
@@ -29,8 +33,8 @@ object ProxyServer {
     private var workerGroup: NioEventLoopGroup? = null
 
     fun startUp(port: Int = 1080,
-              remoteChannelClazz: Class<out Channel> = NioSocketChannel::class.java,
-              rules: Rules = DefaultRules()) {
+                remoteChannelClazz: Class<out Channel> = NioSocketChannel::class.java,
+                rules: Rules = DefaultRules()) {
 
         if (isStarted) return
 
@@ -39,7 +43,10 @@ object ProxyServer {
             bean("remoteChannelClazz") { remoteChannelClazz }
         }
 
-        try { startKoin(listOf(myModule)) } catch (e: AlreadyStartedException) { }
+        try {
+            startKoin(listOf(myModule))
+        } catch (e: AlreadyStartedException) {
+        }
 
         isStarted = true
 

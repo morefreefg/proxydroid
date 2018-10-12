@@ -7,13 +7,13 @@ import me.bwelco.proxy.action.DirectAction
 import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.upstream.RejectUpstreamHandler
 import me.bwelco.proxy.upstream.UpstreamHandler
+import me.bwelco.proxy.upstream.UpstreamHandlerParam
 
 class RejectProxy : Proxy() {
+    override fun createProxyHandler(upstreamHandlerParam: UpstreamHandlerParam): UpstreamHandler {
+        return RejectUpstreamHandler(upstreamHandlerParam)
+    }
 
     override fun followUpAction(): FollowUpAction = DirectAction()
-
-    override fun createProxyHandler(request: Socks5CommandRequest, promise: Promise<Channel>): UpstreamHandler {
-        return RejectUpstreamHandler(request, promise)
-    }
 
 }

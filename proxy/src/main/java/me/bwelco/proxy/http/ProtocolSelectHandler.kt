@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ReplayingDecoder
+import io.netty.handler.codec.socksx.SocksMessage
 import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
 import me.bwelco.proxy.action.DirectAction
 import me.bwelco.proxy.action.FollowUpAction
@@ -12,9 +13,7 @@ import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
 
 @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-class ProtocolSelectHandler(private val remoteChannel: Channel,
-                            private val socks5Request: Socks5CommandRequest,
-                            private val followUpAction: FollowUpAction = DirectAction()) :
+class ProtocolSelectHandler(private val socks5Request: SocksMessage) :
         ReplayingDecoder<ProtocolSelectHandler.State>(State.INIT), KoinComponent {
 
     private val proxyConfig: ProxyRules by inject()
@@ -51,9 +50,14 @@ class ProtocolSelectHandler(private val remoteChannel: Channel,
                 val enableMitm = proxyConfig.mitmConfig != null
 
                 when {
-                    enableMitm && isTls -> ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request, followUpAction))
-                    enableMitm && !isTls -> ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
-                    !enableMitm -> followUpAction.doFollowUp(ctx.channel(), remoteChannel)
+//                    enableMitm && isTls -> {
+//                        ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request, followUpAction))
+//                    }
+//                    enableMitm && !isTls ->
+//                        ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
+//                    !enableMitm ->
+//                    followUpAction.doFollowUp(ctx.channel(), remoteChannel)
+                    isTls -> ctx.pipeline().addLast(SniHandler())
                 }
 
                 ctx.pipeline().fireChannelActive()

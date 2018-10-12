@@ -13,19 +13,15 @@ import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
 import java.net.InetAddress
 
-class HttpUpstreamHandler(request: Socks5CommandRequest,
-                          private val promise: Promise<Channel>,
+class HttpUpstreamHandler(private val upstreamHandlerParam: UpstreamHandlerParam,
                           private val remoteProxyServer: InetAddress,
-                          private val remoteProxyPort: Int) : UpstreamHandler(request, promise) {
+                          private val remoteProxyPort: Int) : UpstreamHandler(upstreamHandlerParam) {
 
     private val bootstrap: Bootstrap by lazy { Bootstrap() }
-    private lateinit var thisClientHandlerCtx: ChannelHandlerContext
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
-
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         val clientChannel = ctx.channel()
-        thisClientHandlerCtx = ctx
 
         bootstrap.group(clientChannel.eventLoop())
                 .channel(remoteChannelClazz)
@@ -35,21 +31,24 @@ class HttpUpstreamHandler(request: Socks5CommandRequest,
                 .handler(ConnectHandler())
 
         bootstrap.connect(remoteProxyServer, remoteProxyPort).addFutureListener {
-            if (it.isSuccess)
-                thisClientHandlerCtx.channel().pipeline().remove(this)
+            ctx.channel().pipeline().remove(this)
+            if (!it.isSuccess) {
+                upstreamHandlerParam.remoteChannelPromise.
+                        setFailure(Throwable("cannot achieve remote server ${remoteProxyServer}:${remoteProxyPort}"))
+            }
         }
     }
 
     inner class ConnectHandler : ChannelInboundHandlerAdapter() {
         override fun channelActive(ctx: ChannelHandlerContext) {
             val outboundChannel = ctx.channel()
-            promise.setSuccess(outboundChannel)
+            upstreamHandlerParam.remoteChannelPromise.setSuccess(outboundChannel)
 
             outboundChannel.pipeline().remove(this)
         }
 
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-            promise.setFailure(cause)
+            upstreamHandlerParam.remoteChannelPromise.setFailure(cause)
         }
     }
 

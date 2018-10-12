@@ -10,19 +10,16 @@ import me.bwelco.proxy.util.addFutureListener
 import org.koin.standalone.inject
 import java.net.InetAddress
 
-class Socks5UpstreamHandler(val request: Socks5CommandRequest,
-                            val promise: Promise<Channel>,
+class Socks5UpstreamHandler(val upstreamHandlerParam: UpstreamHandlerParam,
                             val remoteSocks5Server: InetAddress,
-                            val remoteSocks5ServerPort: Int) : UpstreamHandler(request, promise) {
+                            val remoteSocks5ServerPort: Int) : UpstreamHandler(upstreamHandlerParam) {
 
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 
     val bootstrap: Bootstrap by lazy { Bootstrap() }
-    private lateinit var thisClientHandlerCtx: ChannelHandlerContext
 
     override fun channelActive(ctx: ChannelHandlerContext) {
         val clientChannel = ctx.channel()
-        thisClientHandlerCtx = ctx
 
         bootstrap.group(clientChannel.eventLoop())
                 .channel(remoteChannelClazz)
@@ -32,27 +29,31 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
                 .handler(ConnectHandler())
 
         bootstrap.connect(remoteSocks5Server, remoteSocks5ServerPort).addFutureListener {
-            if (it.isSuccess)
-                thisClientHandlerCtx.channel().pipeline().remove(this)
+            ctx.channel().pipeline().remove(this)
+            if (!it.isSuccess) {
+                upstreamHandlerParam.remoteChannelPromise.setFailure(Throwable("cannot achieve remote server ${remoteSocks5Server}:${remoteSocks5ServerPort}"))
+            }
         }
     }
 
     inner class ConnectHandler : ChannelInboundHandlerAdapter() {
         override fun channelActive(ctx: ChannelHandlerContext) {
 
+            val request = upstreamHandlerParam.socks5Request
+            val promise = upstreamHandlerParam.remoteChannelPromise
+
             val outboundChannel = ctx.channel()
-            outboundChannel.pipeline().addLast(SocksClientInitializer(thisClientHandlerCtx.channel(), request, promise))
+            outboundChannel.pipeline().addLast(SocksClientInitializer(request, promise))
             outboundChannel.pipeline().remove(this)
             outboundChannel.pipeline().fireChannelActive()
         }
 
         override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-            promise.setFailure(cause)
+            upstreamHandlerParam.remoteChannelPromise.setFailure(cause)
         }
     }
 
-    class SocksClientInitializer(val downStreamChannel: Channel,
-                                 val request: Socks5CommandRequest,
+    class SocksClientInitializer(val request: Socks5CommandRequest,
                                  val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
 
         override fun channelActive(ctx: ChannelHandlerContext) {
