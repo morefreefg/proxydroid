@@ -15,10 +15,15 @@ import me.bwelco.proxy.tls.SSLFactory
 import me.bwelco.proxy.util.closeOnFlush
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
+import java.util.concurrent.Executors
 
 
 class HttpRuleHandler(private val remote: Remote) : ChannelInboundHandlerAdapter(), KoinComponent {
 
+
+    companion object {
+        val remoteExcutor = Executors.newCachedThreadPool()
+    }
 
     private val proxyConfig: ProxyRules by inject()
 
@@ -58,20 +63,21 @@ class HttpRuleHandler(private val remote: Remote) : ChannelInboundHandlerAdapter
     inner class HttpMessageHandler : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, request: Any) {
             if (request is FullHttpRequest) {
+                remoteExcutor.submit {
+                    val proxy = proxyConfig.proxylist[remote.host] ?: DirectProxy()
+                    val interceptors = listOf(NetworkInterceptor(request, proxy, remote))
+                    val realChain = RealInterceptorChain(
+                            interceptors = interceptors,
+                            index = 0,
+                            request = request,
+                            clientCtx = ctx)
 
-                val proxy = proxyConfig.proxylist[remote.host] ?: DirectProxy()
-                val interceptors = listOf(NetworkInterceptor(request, proxy, remote))
-                val realChain = RealInterceptorChain(
-                        interceptors = interceptors,
-                        index = 0,
-                        request = request,
-                        clientCtx = ctx)
+                    val response = realChain.proceed(request)
+                    ctx.writeAndFlush(response)
 
-                val response = realChain.proceed(request)
-                ctx.writeAndFlush(response)
-
-                if (!realChain.proceedBypassInternet) {
-                    ctx.channel().closeOnFlush()
+                    if (!realChain.proceedBypassInternet) {
+                        ctx.channel().closeOnFlush()
+                    }
                 }
             }
 

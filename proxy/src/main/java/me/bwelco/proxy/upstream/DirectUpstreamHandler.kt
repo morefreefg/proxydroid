@@ -16,7 +16,7 @@ class DirectUpstreamHandler(val upstreamHandlerParam: UpstreamHandlerParam) : Up
     override fun channelActive(ctx: ChannelHandlerContext) {
         val clientChannel = ctx.channel()
 
-        bootstrap.group(NioEventLoopGroup())
+        bootstrap.group(clientChannel.eventLoop())
                 .channel(remoteChannelClazz)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                 .option(ChannelOption.SO_KEEPALIVE, true)

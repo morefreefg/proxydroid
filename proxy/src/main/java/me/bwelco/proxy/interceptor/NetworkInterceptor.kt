@@ -36,7 +36,7 @@ internal class NetworkInterceptor(private val request: FullHttpRequest,
                         val upstreamTlsHandler = SslContextBuilder.forClient().build().newHandler(remoteChannel.alloc())
                         remoteChannel.pipeline().addFirst("upstreamTlsHandler", upstreamTlsHandler)
                         remoteChannel.pipeline().addLast(HttpResponseDecoder())
-                        remoteChannel.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
+//                        remoteChannel.pipeline().addLast(HttpObjectAggregator(1024 * 1024 * 64))
                         remoteChannel.pipeline().addLast(HttpMessageHandler())
 
                         remoteChannel.pipeline().addAfter(
@@ -68,12 +68,13 @@ internal class NetworkInterceptor(private val request: FullHttpRequest,
 
     inner class HttpMessageHandler : ChannelInboundHandlerAdapter() {
         override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-            if (msg is FullHttpResponse) {
-                this@NetworkInterceptor.response = msg
-                synchronized(lock) {
-                    lock.notifyAll()
-                }
-            }
+            println(msg)
+//            if (msg is FullHttpResponse) {
+//                this@NetworkInterceptor.response = msg
+//                synchronized(lock) {
+//                    lock.notifyAll()
+//                }
+//            }
         }
     }
 }
