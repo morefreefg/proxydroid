@@ -7,7 +7,7 @@ import me.bwelco.proxy.util.closeOnFlush
 import me.bwelco.proxy.util.isEmpty
 import org.koin.standalone.KoinComponent
 
-class SniHandler : AbstractSniHandler<String>(), KoinComponent {
+class HttpsSniHandler : AbstractSniHandler<String>(), KoinComponent {
 
     override fun onLookupComplete(ctx: ChannelHandlerContext, hostname: String?, future: Future<String>) {
         if (hostname.isEmpty()) {

@@ -1,13 +1,9 @@
 package me.bwelco.proxy.http
 
 import io.netty.buffer.ByteBuf
-import io.netty.channel.Channel
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ReplayingDecoder
 import io.netty.handler.codec.socksx.SocksMessage
-import io.netty.handler.codec.socksx.v5.Socks5CommandRequest
-import me.bwelco.proxy.action.DirectAction
-import me.bwelco.proxy.action.FollowUpAction
 import me.bwelco.proxy.rule.ProxyRules
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.inject
@@ -51,13 +47,19 @@ class ProtocolSelectHandler(private val socks5Request: SocksMessage) :
 
                 when {
 //                    enableMitm && isTls -> {
-//                        ctx.pipeline().addLast(SniHandler(remoteChannel, socks5Request, followUpAction))
+//                        ctx.pipeline().addLast(HttpsSniHandler(remoteChannel, socks5Request, followUpAction))
 //                    }
 //                    enableMitm && !isTls ->
 //                        ctx.pipeline().addLast(HttpInterceptorHandler(remoteChannel, socks5Request, followUpAction))
 //                    !enableMitm ->
 //                    followUpAction.doFollowUp(ctx.channel(), remoteChannel)
-                    isTls -> ctx.pipeline().addLast(SniHandler())
+
+                    enableMitm && isTls -> ctx.pipeline().addLast(HttpsSniHandler())
+                    enableMitm && !isTls -> {
+//                        ctx.pipeline().replace(this, "HttpRuleHandler",
+//                                HttpRuleHandler(Remote(hostname!!, 443, true, hostname)))
+                        ctx.pipeline().addLast(HttpDetailHandler())
+                    }
                 }
 
                 ctx.pipeline().fireChannelActive()
