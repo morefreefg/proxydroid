@@ -10,7 +10,9 @@ import me.bwelco.proxy.upstream.UpstreamHandler
 import java.net.InetAddress
 
 class Socks5Proxy(val address: InetAddress,
-                  val port: Int) : Proxy() {
+                  val port: Int,
+                  val userName: String,
+                  val passwd: String) : Proxy() {
 
     override fun followUpAction(): FollowUpAction = DirectAction()
 
@@ -18,7 +20,9 @@ class Socks5Proxy(val address: InetAddress,
         return Socks5UpstreamHandler(request = request,
                 promise = promise,
                 remoteSocks5Server = address,
-                remoteSocks5ServerPort = port)
+                remoteSocks5ServerPort = port,
+                userName = userName,
+                passwd = passwd)
     }
 
 }

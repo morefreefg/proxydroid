@@ -7,13 +7,16 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.concurrent.Promise
 import me.bwelco.proxy.util.addFutureListener
+import me.bwelco.proxy.util.isEmpty
 import org.koin.standalone.inject
 import java.net.InetAddress
 
 class Socks5UpstreamHandler(val request: Socks5CommandRequest,
                             val promise: Promise<Channel>,
                             val remoteSocks5Server: InetAddress,
-                            val remoteSocks5ServerPort: Int) : UpstreamHandler(request, promise) {
+                            val remoteSocks5ServerPort: Int,
+                            val userName: String?,
+                            val passwd: String?) : UpstreamHandler(request, promise) {
 
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 
@@ -51,7 +54,7 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
         }
     }
 
-    class SocksClientInitializer(val downStreamChannel: Channel,
+   inner class SocksClientInitializer(val downStreamChannel: Channel,
                                  val request: Socks5CommandRequest,
                                  val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
 
@@ -59,11 +62,23 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
             val inBoundChannel = ctx.channel()
             inBoundChannel.pipeline().addLast(Socks5ClientEncoder.DEFAULT)
 
-            inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.NO_AUTH)).addFutureListener { channelFuture ->
-                channelFuture.channel().pipeline().remove(this)
-                channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
-                channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
-                channelFuture.channel().pipeline().fireChannelActive()
+            if (userName.isEmpty() && passwd.isEmpty()) {
+                inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.NO_AUTH)).addFutureListener { channelFuture ->
+                    channelFuture.channel().pipeline().remove(this)
+                    channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
+                    channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
+                    channelFuture.channel().pipeline().fireChannelActive()
+                }
+            } else {
+                inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.PASSWORD)).addFutureListener { channelFuture ->
+                    inBoundChannel.writeAndFlush(DefaultSocks5PasswordAuthRequest(userName, passwd))
+                            .addFutureListener {
+                                channelFuture.channel().pipeline().remove(this)
+                                channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
+                                channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
+                                channelFuture.channel().pipeline().fireChannelActive()
+                            }
+                }
             }
         }
 

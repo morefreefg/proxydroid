@@ -6,16 +6,39 @@
     tools:context="me.bwelco.demo.MainActivity">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/user_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="用户名" />
+
+        <EditText
+            android:id="@+id/pass_word"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="密码" />
+
+        <EditText
+            android:id="@+id/ip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="ip" />
+
+        <EditText
+            android:id="@+id/port"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="port" />
 
         <Button
             android:id="@+id/start_proxy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/start_proxy" />
-
 
         <Button
             android:id="@+id/stop_proxy"
@@ -24,9 +47,11 @@
             android:text="@string/stop_proxy" />
 
         <Button
-            android:text="@string/install_cert"
             android:id="@+id/install_cert"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="@string/install_cert" />
+
+
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
