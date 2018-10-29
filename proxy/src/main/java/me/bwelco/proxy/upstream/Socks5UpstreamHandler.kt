@@ -20,7 +20,7 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
 
     private val remoteChannelClazz: Class<out Channel> by inject("remoteChannelClazz")
 
-    val bootstrap: Bootstrap by lazy { Bootstrap() }
+    private val bootstrap: Bootstrap by lazy { Bootstrap() }
     private lateinit var thisClientHandlerCtx: ChannelHandlerContext
 
     override fun channelActive(ctx: ChannelHandlerContext) {
@@ -54,40 +54,26 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
         }
     }
 
-   inner class SocksClientInitializer(val downStreamChannel: Channel,
-                                 val request: Socks5CommandRequest,
-                                 val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
+    inner class SocksClientInitializer(val downStreamChannel: Channel,
+                                       val request: Socks5CommandRequest,
+                                       val promise: Promise<Channel>) : ChannelInboundHandlerAdapter() {
 
         override fun channelActive(ctx: ChannelHandlerContext) {
             val inBoundChannel = ctx.channel()
             inBoundChannel.pipeline().addLast(Socks5ClientEncoder.DEFAULT)
 
-            if (userName.isEmpty() && passwd.isEmpty()) {
-                inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.NO_AUTH)).addFutureListener { channelFuture ->
-                    channelFuture.channel().pipeline().remove(this)
-                    channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
-                    channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
-                    channelFuture.channel().pipeline().fireChannelActive()
-                }
-            } else {
-                inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.PASSWORD)).addFutureListener { channelFuture ->
-                    inBoundChannel.writeAndFlush(DefaultSocks5PasswordAuthRequest(userName, passwd))
-                            .addFutureListener {
-                                channelFuture.channel().pipeline().remove(this)
-                                channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
-                                channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
-                                channelFuture.channel().pipeline().fireChannelActive()
-                            }
-                }
-            }
+            inBoundChannel.writeAndFlush(DefaultSocks5InitialRequest(Socks5AuthMethod.NO_AUTH, Socks5AuthMethod.PASSWORD))
+                    .addFutureListener { channelFuture ->
+                        channelFuture.channel().pipeline().remove(this)
+                        channelFuture.channel().pipeline().addLast(Socks5InitialResponseDecoder())
+                        channelFuture.channel().pipeline().addLast(Socks5InitialResponseHandler())
+                        channelFuture.channel().pipeline().fireChannelActive()
+                    }
         }
 
-        inner class Socks5InitialResponseHandler : SimpleChannelInboundHandler<DefaultSocks5InitialResponse>() {
-
-            override fun channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5InitialResponse) {
-
-                if (msg.decoderResult().isSuccess) {
-                    // send command request
+        inner class Socks5PasswordAuthResponseHandler : SimpleChannelInboundHandler<Socks5PasswordAuthResponse>() {
+            override fun channelRead0(ctx: ChannelHandlerContext, msg: Socks5PasswordAuthResponse) {
+                if (msg.decoderResult().isSuccess && msg.status() == Socks5PasswordAuthStatus.SUCCESS) {
                     ctx.writeAndFlush(request).addFutureListener { channelFuture ->
                         if (channelFuture.isSuccess) {
                             ctx.pipeline().remove(this)
@@ -95,6 +81,36 @@ class Socks5UpstreamHandler(val request: Socks5CommandRequest,
                             ctx.pipeline().addLast(SocksCommandResponseHandler())
                         }
                     }
+                } else {
+                    promise.setFailure(Throwable("Socks5PasswordAuthResponseHandler: decode fail or password fail"))
+                }
+            }
+        }
+
+        inner class Socks5InitialResponseHandler : SimpleChannelInboundHandler<DefaultSocks5InitialResponse>() {
+            override fun channelRead0(ctx: ChannelHandlerContext, msg: DefaultSocks5InitialResponse) {
+                if (msg.decoderResult().isSuccess) {
+                    when (msg.authMethod()) {
+                        Socks5AuthMethod.NO_AUTH -> {
+                            ctx.writeAndFlush(request).addFutureListener { channelFuture ->
+                                if (channelFuture.isSuccess) {
+                                    ctx.pipeline().remove(this)
+                                    ctx.pipeline().addLast(Socks5CommandResponseDecoder())
+                                    ctx.pipeline().addLast(SocksCommandResponseHandler())
+                                }
+                            }
+                        }
+
+                        Socks5AuthMethod.PASSWORD -> {
+                            ctx.pipeline().remove(this)
+                            ctx.pipeline().addLast(Socks5PasswordAuthResponseDecoder())
+                            ctx.pipeline().addLast(Socks5PasswordAuthResponseHandler())
+
+                            ctx.writeAndFlush(DefaultSocks5PasswordAuthRequest(userName, passwd))
+                        }
+                    }
+                } else {
+                    promise.setFailure(Throwable("Socks5InitialResponseHandler: decode fail"))
                 }
             }
         }

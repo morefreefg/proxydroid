@@ -19,6 +19,18 @@ class MainActivity : AppCompatActivity() {
         val ip = findViewById<EditText>(R.id.ip)
         val port = findViewById<EditText>(R.id.port)
 
+        val sp = this.getSharedPreferences("sp", Activity.MODE_PRIVATE)
+        val userNameSP = sp.getString("username", "")
+        val passwdSP = sp.getString("passwd", "")
+        val ipSP = sp.getString("ip", "")
+        val portSP = sp.getInt("port", -1)
+
+        username.setText(userNameSP)
+        passwd.setText(passwdSP)
+        ip.setText(ipSP)
+        port.setText(portSP.toString())
+
+
         findViewById<Button>(R.id.start_proxy).setOnClickListener {
             getSharedPreferences("sp", Activity.MODE_PRIVATE)
                     .edit()

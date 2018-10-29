@@ -13,22 +13,21 @@ class CustomRules : Rules {
     override val mitmConfig: HttpInterceptorMatcher? = object : HttpInterceptorMatcher {
         override fun match(host: String): HttpInterceptor? {
             return when {
-                host.contains("baidu") -> BaiduHttpInterceptor()
-                host.contains("360") -> BaiduHttpInterceptor()
+//                host.contains("baidu") -> BaiduHttpInterceptor()
+//                host.contains("360") -> BaiduHttpInterceptor()
                 else -> null
             }
         }
     }
 
-    override val proxylist = mutableMapOf<String, Proxy>()
-//            mutableMapOf("socks" to Socks5Proxy(Inet4Address.getByName("172.17.13.68"), 6153),
-//                    "http" to HttpProxy(Inet4Address.getByName("172.17.13.68"), 8888))
+    override val proxylist =
+            mutableMapOf("socks" to Socks5Proxy(Inet4Address.getByName("127.0.0.1"), 9001, "nodejs", "rules!"))
 
     override fun proxyMatcher(host: String): String {
 //        return when {
 //            host.contains("baidu") -> "http"
 //            else -> "http"
 //        }
-        return "DIRECT"
+        return "socks"
     }
 }
