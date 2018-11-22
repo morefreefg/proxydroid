@@ -15,7 +15,6 @@ import me.bwelco.proxy.rule.CustomRules
 import me.bwelco.proxy.rule.DefaultRules
 import me.bwelco.proxy.rule.ProxyRules
 import me.bwelco.proxy.rule.Rules
-import me.bwelco.proxy.util.addFutureListener
 import org.koin.dsl.module.Module
 import org.koin.dsl.module.applicationContext
 import org.koin.error.AlreadyStartedException
